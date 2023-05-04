@@ -1,0 +1,43 @@
+/* Style for the dictionary popup */
+.dictionary-popup {
+  position: absolute;
+  z-index: 9999;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  padding: 10px;
+  font-size: 14px;
+}
+
+/* Style for the dictionary popup text */
+.dictionary-popup-text {
+  margin-bottom: 10px;
+    font-size: 28px;
+}
+
+.dictionary-popup-buttons {
+  font-size: 18px;
+}
+
+/* Style for the speak button */
+.dictionary-popup-speak-button {
+  border: none;
+  background-color: #007bff;
+  color: #fff;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  margin-right: 5px;
+}
+
+/* Style for the stop button */
+.dictionary-popup-stop-button {
+  border: none;
+  background-color: #dc3545;
+  color: #fff;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+}
