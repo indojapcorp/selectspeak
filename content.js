@@ -7,6 +7,7 @@ let currentWord = null;
 
 function createDefinitionPopup(definition, showdef) {
 
+  removeDefinitionPopup();
   const popup = document.createElement("div");
   popup.setAttribute("id", "popup");
 
@@ -48,6 +49,18 @@ function createDefinitionPopup(definition, showdef) {
   });
   popupButtons.appendChild(stopButton);
 
+
+  const closeButton = document.createElement("button");
+  closeButton.setAttribute("id", "closeButton");
+  closeButton.classList.add('dictionary-popup-close-button');
+
+  closeButton.textContent = "Close";
+  closeButton.disabled = false;
+  closeButton.addEventListener("click", () => {
+    removeDefinitionPopup();
+  });
+  popupButtons.appendChild(closeButton);  
+
   popup.appendChild(popupButtons);
 
 
@@ -79,7 +92,7 @@ function containsWhitespace(str) {
 
 function handleMouseUp(event) {
   var source = event.target || event.srcElement;
-  if (source.id == 'speakButton' || source.id == 'stopSpeakButton') {
+  if (source.id == 'speakButton' || source.id == 'stopSpeakButton' || source.id == 'closeButton') {
     return;
   }
 
@@ -126,8 +139,9 @@ document.addEventListener("mouseup", (event) => {
 
 
 document.addEventListener("mousedown", (event) => {
-
   var source = event.target || event.srcElement;
+  console.log("mouse down source.id="+source);
+
   if (source.id == 'speakButton' || source.id == 'stopSpeakButton') {
   }
   else if (event.button === 0 && currentWord) {
@@ -138,6 +152,9 @@ document.addEventListener("mousedown", (event) => {
       selection.removeAllRanges();
       removeDefinitionPopup();
     }
+  }
+  else {
+    removeDefinitionPopup();
   }
 });
 

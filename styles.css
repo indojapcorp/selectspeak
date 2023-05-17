@@ -41,3 +41,14 @@
   border-radius: 5px;
   font-size: 14px;
 }
+
+.dictionary-popup-close-button {
+  border: none;
+  background-color: #dc3545;
+  color: #fff;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-size: 14px;
+  margin-left: 5px;
+}
