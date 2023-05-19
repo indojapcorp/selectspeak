@@ -32,7 +32,6 @@ function createDefinitionPopup(definition, showdef) {
   speakButton.classList.add('dictionary-popup-speak-button');
   speakButton.textContent = "Speak";
   speakButton.addEventListener("click", () => {
-    console.log("speak clicked");
     speakText(definition);
   });
   popupButtons.appendChild(speakButton);
@@ -137,7 +136,6 @@ if (chrome.runtime?.id) {
 
 document.addEventListener("mousedown", (event) => {
   var source = event.target || event.srcElement;
-  console.log("mouse down source.id="+source);
 
   if (source.id == 'speakButton' || source.id == 'stopSpeakButton') {
   }
