@@ -45,26 +45,59 @@ function fetchDefinition(word, callback) {
     });
 }
 var valtxt;
-
+var spkonsleval;
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
   if (request.word) {
-    fetchDefinition(request.word, (definition) => {
-      sendResponse({ definition });
+
+    chrome.i18n.detectLanguage(request.word, function (result) {
+
+      var outputLang = "en";
+      if (result && result.languages[0]) {
+        outputLang = result.languages[0].language;
+        console.log("outputLang in word="+outputLang);
+        if(outputLang!="ja" && outputLang!="zh"){
+          fetchDefinition(request.word, (definition) => {
+            sendResponse({ definition });
+          });   
+        }
+      }
     });
+
+    // fetchDefinition(request.word, (definition) => {
+    //   sendResponse({ definition });
+    // });
     return true;
   } else if (request.speak) {
     var outputLang = "en";
     var textToSpeak=request.speak.replace(/(?:\r\n|\r|\n|\/|:)/g, '...');
     console.log(textToSpeak);
     chrome.i18n.detectLanguage(request.speak, function (result) {
+
+      const REGEX_CHINESE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
+      const hasChinese = request.speak.match(REGEX_CHINESE);
+
       if (result && result.languages[0]) {
         outputLang = result.languages[0].language;
-        chrome.tts.speak(textToSpeak, { lang: outputLang });
+        if(!result.isReliable && outputLang!="ja" && outputLang!="zh"){
+          outputLang="en";
+        }else if(!hasChinese && (outputLang=="ja" || outputLang=="zh")){
+          outputLang="en";
+        }else if(hasChinese && (outputLang=="ja" || outputLang=="zh")){
+          outputLang="ja";
+        }
+        
+        console.log("outputLang="+outputLang);
+        if(outputLang=="en"){
+          chrome.tts.speak(textToSpeak, { lang: outputLang, voiceName: 'Alex'});
+          
+        }else{
+          chrome.tts.speak(textToSpeak, { lang: outputLang });
+        }
         sendResponse({ deflang: result.languages[0].language });
       }else{
         outputLang = "en";
-        chrome.tts.speak(textToSpeak, { lang: outputLang });
+        chrome.tts.speak(textToSpeak, { lang: outputLang , voiceName: 'Alex' });
         sendResponse({ deflang: "en" });
       }
     });
@@ -76,11 +109,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       var tabId = tabs[0].id;
+      var spkonseltxt=tabs[0].id+"spkonseltxt";
       chrome.storage.local.get(tabId.toString(), function (data) {
         valtxt = data[tabId];
       });
+      chrome.storage.local.get(spkonseltxt, function (data) {
+        spkonsleval = data[spkonseltxt];
+      });
+      
     });
-    sendResponse({ deflang: valtxt });
+    console.log("spkonsleval in bg="+spkonsleval)
+    sendResponse({ deflang: valtxt , spkonsel: spkonsleval });
 
   }
 });

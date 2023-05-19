@@ -128,7 +128,16 @@ if (chrome.runtime?.id) {
   chrome.runtime.sendMessage({ slttxtval: "abc" }, (response) => {
 
     if (response && response.deflang && response.deflang=='Yes') {
+      const selection = window.getSelection();
+      const selectedWord = selection.toString().trim();
+
       handleMouseUp(event);
+      console.log("here1");
+      if(response.spkonsel && response.spkonsel=='Yes'){
+        console.log("here2");
+        console.log(selectedWord);
+        speakText(selectedWord);
+      }
     }
   });
 }
@@ -167,25 +176,30 @@ document.addEventListener("DOMContentLoaded", function () {
 
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     var tabId = tabs[0].id;
+    var spkonseltxtfortabid = tabs[0].id+"spkonseltxt";
     chrome.storage.local.get(tabId.toString(), function (data) {
       document.getElementById("seltxt").value = data[tabId] || "No";
     });
+    chrome.storage.local.get(spkonseltxtfortabid, function (data) {
+      document.getElementById("spkonseltxt").value = data[spkonseltxtfortabid] || "No";
+    });
+
   });
 
   document.getElementById("save").addEventListener("click", function () {
     var seltxt = document.getElementById("seltxt").value;
+    var spkonseltxt = document.getElementById("spkonseltxt").value;
+
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       var tabId = tabs[0].id;
       var data = {};
+      var spkonseltxtfortabid = tabs[0].id+"spkonseltxt";
       data[tabId] = seltxt;
+      data[spkonseltxtfortabid] = spkonseltxt;
       chrome.storage.local.set(data, function () {
-        alert("Changed to " + seltxt);
+        alert("Changed enabled ext to " + seltxt +" and Speak on Select to "+spkonseltxt);
       });
     });
-  });
-
-  document.getElementById("recorder").addEventListener("click", function () {
-
   });
 
 });
