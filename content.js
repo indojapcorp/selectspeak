@@ -63,10 +63,8 @@ function createDefinitionPopup(definition, showdef) {
 
   popup.appendChild(popupButtons);
 
-
   return popup;
 }
-
 
 
 function showDefinitionPopup(definition, x, y, showdef) {
@@ -117,14 +115,13 @@ function handleMouseUp(event) {
       showDefinitionPopup(selectedWord, x, y, false);
     }
   }
-
-
 }
 
 //document.addEventListener("mouseup", handleMouseUp);
 
 document.addEventListener("mouseup", (event) => {
 
+if (chrome.runtime?.id) {
 
   chrome.runtime.sendMessage({ slttxtval: "abc" }, (response) => {
 
@@ -132,7 +129,7 @@ document.addEventListener("mouseup", (event) => {
       handleMouseUp(event);
     }
   });
-
+}
    
 });
 
@@ -158,8 +155,15 @@ document.addEventListener("mousedown", (event) => {
   }
 });
 
-
+var win;
 document.addEventListener("DOMContentLoaded", function () {
+  
+  if(!win){
+  win = window.open(
+    "https://indojapcorp.github.io/mediarecorder/", 'popUpWindow1', 'height=250,width=400,left=0,top=0,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=no');
+  win.focus();
+  }
+
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     var tabId = tabs[0].id;
     chrome.storage.local.get(tabId.toString(), function (data) {
@@ -178,6 +182,11 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     });
   });
+
+  document.getElementById("recorder").addEventListener("click", function () {
+
+  });
+
 });
 
 let lang = "ja";
