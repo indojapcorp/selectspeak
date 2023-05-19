@@ -5,7 +5,7 @@ document.head.insertAdjacentHTML('beforeend', `<link rel="stylesheet" type="text
 
 let currentWord = null;
 
-function createDefinitionPopup(definition, showdef) {
+function createDefinitionPopup(selectedWord,definition, showdef) {
 
   removeDefinitionPopup();
   const popup = document.createElement("div");
@@ -32,7 +32,8 @@ function createDefinitionPopup(definition, showdef) {
   speakButton.classList.add('dictionary-popup-speak-button');
   speakButton.textContent = "Speak";
   speakButton.addEventListener("click", () => {
-    speakText(definition);
+    //speakText(selectedWord+"..."+definition.replace(/(?:\r\n|\r|\n|\/)/g, '...'));
+    speakText(selectedWord+"..."+definition);
   });
   popupButtons.appendChild(speakButton);
 
@@ -66,8 +67,8 @@ function createDefinitionPopup(definition, showdef) {
 }
 
 
-function showDefinitionPopup(definition, x, y, showdef) {
-  const popup = createDefinitionPopup(definition, showdef);
+function showDefinitionPopup(selectedWord,definition, x, y, showdef) {
+  const popup = createDefinitionPopup(selectedWord,definition, showdef);
   popup.style.left = x + "px";
   popup.style.top = y + "px";
   document.body.appendChild(popup);
@@ -107,11 +108,13 @@ function handleMouseUp(event) {
     if (!containsWhitespace(selectedWord)) {
       chrome.runtime.sendMessage({ word: selectedWord }, (response) => {
         if (response && response.definition) {
-          showDefinitionPopup(response.definition, x, y, true);
+          showDefinitionPopup(selectedWord,response.definition, x+5, y+10, true);
+        }else if(response){
+          showDefinitionPopup(selectedWord,"", x+5, y+10, true);
         }
       });
     } else {
-      showDefinitionPopup(selectedWord, x, y, false);
+      showDefinitionPopup("",selectedWord, x, y, false);
     }
   }
 }
@@ -193,7 +196,6 @@ let utterance = null;
 function speakText(text) {
 
   if (!text) return;
-
   chrome.runtime.sendMessage({ speak: text }, (response) => {
 
   });
