@@ -10,6 +10,12 @@ chrome.contextMenus.create({
   contexts: ["selection"]
 });
 
+chrome.contextMenus.create({
+  id: "recorder",
+  title: "Show Recorder",
+  contexts: ["all"]
+});
+
 chrome.contextMenus.onClicked.addListener(function (info, tab) {
   if (info.menuItemId === "stopSpeak") {
     chrome.tts.stop();
@@ -23,6 +29,11 @@ if(result.languages){
 
 }
   });
+  }else if (info.menuItemId === "recorder") {
+    //chrome.tts.stop();
+    var win = window.open(
+      "https://indojapcorp.github.io/mediarecorder/", 'popUpWindow1', 'height=250,width=400,left=0,top=0,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=no');
+    win.focus();
   }
 });
 

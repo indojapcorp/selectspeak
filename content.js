@@ -127,17 +127,16 @@ if (chrome.runtime?.id) {
 
   chrome.runtime.sendMessage({ slttxtval: "abc" }, (response) => {
 
-    if (response && response.deflang && response.deflang=='Yes') {
+    if(response.spkonsel && response.spkonsel=='Yes'){
       const selection = window.getSelection();
       const selectedWord = selection.toString().trim();
+      console.log("here2");
+      console.log(selectedWord);
+      speakText(selectedWord);
+    }
 
+    if (response && response.deflang && response.deflang=='Yes') {
       handleMouseUp(event);
-      console.log("here1");
-      if(response.spkonsel && response.spkonsel=='Yes'){
-        console.log("here2");
-        console.log(selectedWord);
-        speakText(selectedWord);
-      }
     }
   });
 }
@@ -168,11 +167,11 @@ document.addEventListener("mousedown", (event) => {
 var win;
 document.addEventListener("DOMContentLoaded", function () {
   
-  if(!win){
-  win = window.open(
-    "https://indojapcorp.github.io/mediarecorder/", 'popUpWindow1', 'height=250,width=400,left=0,top=0,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=no');
-  win.focus();
-  }
+  // if(!win){
+  // win = window.open(
+  //   "https://indojapcorp.github.io/mediarecorder/", 'popUpWindow1', 'height=250,width=400,left=0,top=0,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=no');
+  // win.focus();
+  // }
 
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     var tabId = tabs[0].id;
