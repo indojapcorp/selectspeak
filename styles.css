@@ -7,6 +7,10 @@
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);
   padding: 10px;
   font-size: 14px;
+  max-height: 80vh;
+  max-width: 80vw;
+  overflow: auto;
+  text-align: justify;  
 }
 
 /* Style for the dictionary popup text */

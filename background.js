@@ -16,6 +16,8 @@ chrome.contextMenus.create({
   contexts: ["all"]
 });
 
+document.head.innerHTML += "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script>"; 
+
 chrome.contextMenus.onClicked.addListener(function (info, tab) {
   if (info.menuItemId === "stopSpeak") {
     chrome.tts.stop();
@@ -83,35 +85,49 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     var outputLang = "en";
     var textToSpeak=request.speak.replace(/(?:\r\n|\r|\n|\/|:)/g, '...');
     console.log(textToSpeak);
-    chrome.i18n.detectLanguage(request.speak, function (result) {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      var tabId = tabs[0].id;
+    chrome.storage.local.get([tabId+"speakautocheckbox", tabId + "srclanguage", tabId + "tgtlanguage"], function(data) {
 
-      const REGEX_CHINESE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
-      const hasChinese = request.speak.match(REGEX_CHINESE);
+      var speakautocheckbox = data[tabId + "speakautocheckbox"] || false;
+      var tgtlanguage = data[tabId + "tgtlanguage"] || "en_US";
+      console.log("spk tgtlanguage="+tgtlanguage);
+      if(speakautocheckbox){
+        chrome.i18n.detectLanguage(request.speak, function (result) {
 
-      if (result && result.languages[0]) {
-        outputLang = result.languages[0].language;
-        if(!result.isReliable && outputLang!="ja" && outputLang!="zh"){
-          outputLang="en";
-        }else if(!hasChinese && (outputLang=="ja" || outputLang=="zh")){
-          outputLang="en";
-        }else if(hasChinese && (outputLang=="ja" || outputLang=="zh")){
-          outputLang="ja";
-        }
-        
-        console.log("outputLang="+outputLang);
-        if(outputLang=="en"){
-          chrome.tts.speak(textToSpeak, { lang: outputLang, voiceName: 'Alex'});
-          
-        }else{
-          chrome.tts.speak(textToSpeak, { lang: outputLang });
-        }
-        sendResponse({ deflang: result.languages[0].language });
+          const REGEX_CHINESE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
+          const hasChinese = request.speak.match(REGEX_CHINESE);
+    
+          if (result && result.languages[0]) {
+            outputLang = result.languages[0].language;
+            if(!result.isReliable && outputLang!="ja" && outputLang!="zh"){
+              outputLang="en";
+            }else if(!hasChinese && (outputLang=="ja" || outputLang=="zh")){
+              outputLang="en";
+            }else if(hasChinese && (outputLang=="ja" || outputLang=="zh")){
+              outputLang="ja";
+            }
+            
+            console.log("outputLang="+outputLang);
+            if(outputLang=="en"){
+              chrome.tts.speak(textToSpeak, { lang: outputLang, voiceName: 'Alex'});
+              
+            }else{
+              chrome.tts.speak(textToSpeak, { lang: outputLang });
+            }
+            sendResponse({ deflang: result.languages[0].language });
+          }else{
+            outputLang = "en";
+            chrome.tts.speak(textToSpeak, { lang: outputLang , voiceName: 'Alex' });
+            sendResponse({ deflang: "en" });
+          }
+        });
       }else{
-        outputLang = "en";
-        chrome.tts.speak(textToSpeak, { lang: outputLang , voiceName: 'Alex' });
-        sendResponse({ deflang: "en" });
+        chrome.tts.speak(textToSpeak, { lang: tgtlanguage });
       }
     });
+    });
+
 
   } else if (request.stopspeak) {
     chrome.tts.stop();
@@ -132,5 +148,43 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log("spkonsleval in bg="+spkonsleval)
     sendResponse({ deflang: valtxt , spkonsel: spkonsleval });
 
+  }else if (request.message === "getTranslationValues") {
+
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      var tabId = tabs[0].id;
+    // // Get the checkbox value from the storage
+    // chrome.storage.local.get(tabId+"gtcheckbox", function(data) {
+    //   var value = data[tabId+"gtcheckbox"] || false;
+    //   console.log("val in bg="+value)
+    //   // Send the checkbox value back to the content script
+    //   sendResponse({ value: value });
+    // });
+
+    chrome.storage.local.get([tabId+"gtcheckbox", tabId + "srclanguage", tabId + "tgtlanguage"], function(data) {
+      var chkvalue = data[tabId + "gtcheckbox"] || "false";
+      var srclanguage = data[tabId + "srclanguage"] || "en_US";
+      var tgtlanguage = data[tabId + "tgtlanguage"] || "en_US";
+
+      // Send the language values back to the content script
+      sendResponse({ chkvalue: chkvalue, srclanguage: srclanguage, tgtlanguage: tgtlanguage });
+    });
+
+    console.log("returning false")
+    // Indicate that the response will be sent asynchronously
+  });
+  //sendResponse({ value: true });
+  return true;
   }
+
 });
+
+// Clear storage values when the browser is closed
+chrome.runtime.onSuspend.addListener(function() {
+  chrome.storage.local.clear();
+});
+
+// Clear local storage value for the tab when it is closed
+chrome.tabs.onRemoved.addListener(function(tabId) {
+  chrome.storage.local.remove(tabId.toString());
+});
+
