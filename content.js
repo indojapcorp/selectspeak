@@ -29,14 +29,12 @@ function createDefinitionPopup(selectedWord,definition, showdef) {
     // s.padding         = "2px";
     s.whiteSpace      = 'pre';  // <-- Right here.
 
-console.log("chk="+gtcheckboxEnabled);
+//console.log("chk="+gtcheckboxEnabled);
 
 // Send a message to the background script requesting the checkbox value
 chrome.runtime.sendMessage({ message: "getTranslationValues" }, function(response) {
   if (response && response.chkvalue !== undefined) {
     var isChecked = response.chkvalue;
-
-    console.log("Checkbox value:", isChecked);
 
     if(isChecked){
       var translatedVal;
@@ -44,7 +42,7 @@ chrome.runtime.sendMessage({ message: "getTranslationValues" }, function(respons
       translate(selectedWord,response.srclanguage,response.tgtlanguage)
       .then(result => {
         definition = result; // Assign the result to the global variable
-        console.log("translatedVal="+definition); // Log the value of translatedVal
+        //console.log("translatedVal="+definition); // Log the value of translatedVal
         popupText.textContent = definition;
         popup.appendChild(popupText);
       });
@@ -343,15 +341,15 @@ async function translate(sourceText,sourceLang,targetLang) {
   //var targetLang = $('#trtgtlang').val();
   //var targetLang = 'ja';
   var finalstr = "";
-  console.log(sourceText);
+  //console.log(sourceText);
 
   var url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=" + sourceLang + "&tl=" + targetLang + "&dt=t&q=" + encodeURI(sourceText);
-  console.log(url);
+  //console.log(url);
 
   var translatedString;
 
   translatedString = await getStringFromJSON(url);
-  console.log("ddfdf="+translatedString);
+  //console.log("ddfdf="+translatedString);
   return translatedString;
   // getStringFromJSON(url)
   // .then(result => {

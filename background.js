@@ -84,14 +84,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.speak) {
     var outputLang = "en";
     var textToSpeak=request.speak.replace(/(?:\r\n|\r|\n|\/|:)/g, '...');
-    console.log(textToSpeak);
+    //console.log(textToSpeak);
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       var tabId = tabs[0].id;
     chrome.storage.local.get([tabId+"speakautocheckbox", tabId + "srclanguage", tabId + "tgtlanguage"], function(data) {
 
       var speakautocheckbox = data[tabId + "speakautocheckbox"] || false;
       var tgtlanguage = data[tabId + "tgtlanguage"] || "en_US";
-      console.log("spk tgtlanguage="+tgtlanguage);
+
       if(speakautocheckbox){
         chrome.i18n.detectLanguage(request.speak, function (result) {
 
@@ -169,7 +169,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ chkvalue: chkvalue, srclanguage: srclanguage, tgtlanguage: tgtlanguage });
     });
 
-    console.log("returning false")
+   // console.log("returning false")
     // Indicate that the response will be sent asynchronously
   });
   //sendResponse({ value: true });
