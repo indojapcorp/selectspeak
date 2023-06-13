@@ -85,7 +85,6 @@ if(result.languages){
    // chrome.tabs.executeScript(tab.id, { code: 'setSpeechLanguage("en");' });
    chrome.storage.local.get(tabId+'srclanguage', function(data) {
     var srclanguage = data[tabId + "srclanguage"] || "en_US";
-    console.log("srclanguage="+srclanguage);
    chrome.tabs.executeScript(tab.id, {
     code: `
       if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
@@ -98,11 +97,16 @@ if(result.languages){
 
         recognition.onresult = function(event) {
           const transcript = event.results[event.results.length - 1][0].transcript;
-          //chrome.tabs.sendMessage(tab.id, { transcript });
+          console.log("transcript="+transcript.trim().toUpperCase());
+
+          if(transcript.trim().toUpperCase() == 'STOP' || transcript.trim().toUpperCase() == 'स्टॉप' || transcript.trim().toUpperCase() == '終わり'){
+            console.log("Stopped");
+            recognition.stop();
+          }
           const inputField = document.activeElement;
           console.log('Speech recognition transcript='+transcript);
           if (inputField && (inputField.nodeName === 'INPUT' || inputField.nodeName === 'TEXTAREA')) {
-            inputField.value += transcript + '\\n';
+            inputField.value += transcript.trim() + '\\n';
           }
 
         };
@@ -111,11 +115,6 @@ if(result.languages){
 
         window.stopSpeechRecognition = function() {
           recognition.stop();
-        };
-
-        window.setSpeechLanguage = function(lang) {
-          console.log("lang="+lang);
-          recognition.lang = lang;
         };
 
       } else {
