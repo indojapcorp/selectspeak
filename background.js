@@ -5,6 +5,12 @@ chrome.contextMenus.create({
 });
 
 chrome.contextMenus.create({
+  id: "speakText",
+  title: "Speak Text Src Lang",
+  contexts: ["selection"]
+});
+
+chrome.contextMenus.create({
   id: "speakTextAuto",
   title: "Speak Text Auto Detect Lang",
   contexts: ["selection"]
@@ -14,6 +20,19 @@ chrome.contextMenus.create({
   id: "recorder",
   title: "Show Recorder",
   contexts: ["all"]
+});
+
+chrome.contextMenus.create({
+  id: "speechtotextstart",
+  title: "Start Speech",
+  contexts: ["all"]
+});
+
+chrome.contextMenus.create({
+  id: "speechtotextstop",
+  title: "Stop Speech",
+  contexts: ["all"],
+  enabled: false
 });
 
 document.head.innerHTML += "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script>"; 
@@ -31,15 +50,87 @@ if(result.languages){
 
 }
   });
+  }else if (info.menuItemId === "speakText") {
+  
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      var tabId = tabs[0].id;
+  	var outputLang = "en";
+
+    chrome.storage.local.get([tabId+"speakautocheckbox", tabId + "srclanguage", tabId + "tgtlanguage"], function(data) {
+
+      var speakautocheckbox = data[tabId + "speakautocheckbox"] || false;
+      var srclanguage = data[tabId + "srclanguage"] || "en_US";
+
+      if(srclanguage=="en_US"){
+        chrome.tts.speak(info.selectionText, { lang: srclanguage, voiceName: 'Alex'});
+        
+      }else{
+
+      chrome.tts.speak(info.selectionText.replace(/(?:\r\n|\r|\n|\/|:)/g, '...'), { lang: srclanguage });
+      }
+
+    });
+  });
+
   }else if (info.menuItemId === "recorder") {
     //chrome.tts.stop();
     var win = window.open(
       "https://indojapcorp.github.io/mediarecorder/", 'popUpWindow1', 'height=250,width=400,left=0,top=0,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=no');
     win.focus();
+  }else if (info.menuItemId === "speechtotextstart"){
+    chrome.contextMenus.update('speechtotextstart', { enabled: false });
+    chrome.contextMenus.update('speechtotextstop', { enabled: true });
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      var tabId = tabs[0].id;
+   // chrome.tabs.executeScript(tab.id, { code: 'setSpeechLanguage("en");' });
+   chrome.storage.local.get(tabId+'srclanguage', function(data) {
+    var srclanguage = data[tabId + "srclanguage"] || "en_US";
+    console.log("srclanguage="+srclanguage);
+   chrome.tabs.executeScript(tab.id, {
+    code: `
+      if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.continuous = true;
+        recognition.interimResults = false;
+      
+        recognition.lang = '${srclanguage}';
+
+
+        recognition.onresult = function(event) {
+          const transcript = event.results[event.results.length - 1][0].transcript;
+          //chrome.tabs.sendMessage(tab.id, { transcript });
+          const inputField = document.activeElement;
+          console.log('Speech recognition transcript='+transcript);
+          if (inputField && (inputField.nodeName === 'INPUT' || inputField.nodeName === 'TEXTAREA')) {
+            inputField.value += transcript + '\\n';
+          }
+
+        };
+      
+        recognition.start();
+
+        window.stopSpeechRecognition = function() {
+          recognition.stop();
+        };
+
+        window.setSpeechLanguage = function(lang) {
+          console.log("lang="+lang);
+          recognition.lang = lang;
+        };
+
+      } else {
+        console.log('Speech recognition not supported');
+      }
+    `
+  });
+   });
+  });
+  }else if (info.menuItemId === "speechtotextstop"){
+    chrome.tabs.executeScript(tab.id, { code: 'stopSpeechRecognition();' });
+    chrome.contextMenus.update('speechtotextstart', { enabled: true });
+    chrome.contextMenus.update('speechtotextstop', { enabled: false });
   }
 });
-
-
 
 
 function fetchDefinition(word, callback) {
@@ -57,11 +148,11 @@ function fetchDefinition(word, callback) {
       callback(null);
     });
 }
-var valtxt;
-var spkonsleval;
+//var valtxt;
+//var spkonsleval;
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
-  if (request.word) {
+if (request.word) {
 
     chrome.i18n.detectLanguage(request.word, function (result) {
 
@@ -82,6 +173,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     // });
     return true;
   } else if (request.speak) {
+
+    // chrome.tts.getVoices(
+    //   function(voices) {
+    //     for (var i = 0; i < voices.length; i++) {
+    //       console.log('Voice ' + i + ':');
+    //       console.log('  name: ' + voices[i].voiceName);
+    //       console.log('  lang: ' + voices[i].lang);
+    //       console.log('  extension id: ' + voices[i].extensionId);
+    //       console.log('  event types: ' + voices[i].eventTypes);
+    //     }
+    //   }
+    // );
+
     var outputLang = "en";
     var textToSpeak=request.speak.replace(/(?:\r\n|\r|\n|\/|:)/g, '...');
     //console.log(textToSpeak);
@@ -92,6 +196,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       var speakautocheckbox = data[tabId + "speakautocheckbox"] || false;
       var tgtlanguage = data[tabId + "tgtlanguage"] || "en_US";
 
+      
       if(speakautocheckbox){
         chrome.i18n.detectLanguage(request.speak, function (result) {
 
@@ -123,11 +228,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           }
         });
       }else{
+        console.log("tgtlanguage else="+tgtlanguage);
         chrome.tts.speak(textToSpeak, { lang: tgtlanguage });
       }
     });
     });
 
+    return true;
 
   } else if (request.stopspeak) {
     chrome.tts.stop();
@@ -137,17 +244,27 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       var tabId = tabs[0].id;
       var spkonseltxt=tabs[0].id+"spkonseltxt";
-      chrome.storage.local.get(tabId.toString(), function (data) {
-        valtxt = data[tabId];
+      var valtxt;
+      var spkonsleval;
+
+      chrome.storage.local.get([tabs[0].id+"seltxt",tabs[0].id+"spkonseltxt"], function (data) {
+        var valtxt = data[tabs[0].id+"seltxt"];
+        var spkonsleval = data[tabs[0].id+"spkonseltxt"];
+        //console.log("spkonsleval in bg="+spkonsleval)
+        sendResponse({ deflang: valtxt , spkonsel: spkonsleval });
       });
-      chrome.storage.local.get(spkonseltxt, function (data) {
-        spkonsleval = data[spkonseltxt];
-      });
+
+      // chrome.storage.local.get(tabs[0].id+"seltxt", function (data) {
+      //   valtxt = data[tabs[0].id+"seltxt"];
+      // });
+      // chrome.storage.local.get(spkonseltxt, function (data) {
+      //   spkonsleval = data[spkonseltxt];
+      // });
       
     });
-    console.log("spkonsleval in bg="+spkonsleval)
-    sendResponse({ deflang: valtxt , spkonsel: spkonsleval });
-
+    
+    //sendResponse({ deflang: valtxt , spkonsel: spkonsleval });
+    return true;
   }else if (request.message === "getTranslationValues") {
 
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {

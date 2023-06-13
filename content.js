@@ -180,7 +180,7 @@ if (chrome.runtime?.id) {
 
   chrome.runtime.sendMessage({ slttxtval: "abc" }, (response) => {
 
-    if(response.spkonsel && response.spkonsel=='Yes'){
+    if(response.spkonsel && response.spkonsel){
       const selection = window.getSelection();
       const selectedWord = selection.toString().trim();
       console.log("here2");
@@ -188,7 +188,7 @@ if (chrome.runtime?.id) {
       speakText(selectedWord);
     }
 
-    if (response && response.deflang && response.deflang=='Yes') {
+    if (response && response.deflang && response.deflang) {
       handleMouseUp(event);
     }
   });
@@ -235,41 +235,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
     
     chrome.storage.local.get([tabId.toString(),tabId+"speakautocheckbox",tabId+"seltxt",tabId+"spkonseltxt",tabId+"gtcheckbox", tabId + "srclanguage", tabId + "tgtlanguage"], function (data) {
-      document.getElementById("seltxt").value = data[tabId] || "No";
-      document.getElementById("spkonseltxt").value = data[spkonseltxtfortabid] || "No";
-      document.getElementById("srclanguage").value = data[tabs[0].id+"srclanguage"];
-      document.getElementById("tgtlanguage").value = data[tabs[0].id+"tgtlanguage"];
+      document.getElementById("seltxt").checked = data[tabs[0].id+"seltxt"];
+      document.getElementById("spkonseltxt").checked = data[tabs[0].id+"spkonseltxt"] ;
+      document.getElementById("srclanguage").value = data[tabs[0].id+"srclanguage"] || "en-US";
+      document.getElementById("tgtlanguage").value = data[tabs[0].id+"tgtlanguage"] || "ja-JP";
       document.getElementById("gtcheckbox").checked = data[tabId+"gtcheckbox"];
       document.getElementById("speakautocheckbox").checked = data[tabId+"speakautocheckbox"];
     });
 
-    // chrome.storage.local.get(tabId.toString(), function (data) {
-    //   document.getElementById("seltxt").value = data[tabId] || "No";
-    // });
-    // chrome.storage.local.get(spkonseltxtfortabid, function (data) {
-    //   document.getElementById("spkonseltxt").value = data[spkonseltxtfortabid] || "No";
-    // });
 
-    // chrome.storage.local.get(tabs[0].id+"srclanguage", function (data) {
-    //   document.getElementById("srclanguage").value = data[tabs[0].id+"srclanguage"];
-    // });
+    document.getElementById("seltxt").addEventListener("change", function() {
+      var isChecked = document.getElementById("seltxt").checked;
+      gtcheckboxEnabled=isChecked;
 
-    // chrome.storage.local.get(tabs[0].id+"tgtlanguage", function (data) {
-    //   document.getElementById("tgtlanguage").value = data[tabs[0].id+"tgtlanguage"];
-    // });
+      var newData = {};
+      newData[tabId+"seltxt"] = isChecked;
+      chrome.storage.local.set(newData);
+    });
 
 
-    // // Load the stored value of the checkbox for the current tab
-    //     chrome.storage.local.get(tabId+"gtcheckbox", function(data) {
-    //       document.getElementById("gtcheckbox").checked = data[tabId+"gtcheckbox"];
-    //       gtcheckboxEnabled=data[tabId+"gtcheckbox"];
-    //     });
+    document.getElementById("spkonseltxt").addEventListener("change", function() {
+      var isChecked = document.getElementById("spkonseltxt").checked;
+      gtcheckboxEnabled=isChecked;
 
-    //             // Load the stored value of the checkbox for the current tab
-    //             chrome.storage.local.get(tabId+"speakautocheckbox", function(data) {
-    //               document.getElementById("speakautocheckbox").checked = data[tabId+"speakautocheckbox"];
-    //             });
-        
+      var newData = {};
+      newData[tabId+"spkonseltxt"] = isChecked;
+      chrome.storage.local.set(newData);
+    });
+
+
         // Save the checkbox value for the current tab when it changes
         document.getElementById("gtcheckbox").addEventListener("change", function() {
           var isChecked = document.getElementById("gtcheckbox").checked;
@@ -289,31 +283,22 @@ document.addEventListener("DOMContentLoaded", function () {
                   newData[tabId+"speakautocheckbox"] = isChecked;
                   chrome.storage.local.set(newData);
                 });
-        
 
-  });
+                document.getElementById("srclanguage").addEventListener("change", function() {
+                  var isChecked = document.getElementById("srclanguage").value;
+                  var newData = {};
+                  newData[tabId+"srclanguage"] = isChecked;
+                  chrome.storage.local.set(newData);
+                });
 
-  document.getElementById("save").addEventListener("click", function () {
-    var seltxt = document.getElementById("seltxt").value;
-    var spkonseltxt = document.getElementById("spkonseltxt").value;
-    var srclanguageSelect = document.getElementById("srclanguage");
-    var tgtlanguageSelect = document.getElementById("tgtlanguage");
-    var srclanguage = srclanguageSelect.value;
-    var tgtlanguage = tgtlanguageSelect.value;
-  
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      var tabId = tabs[0].id;
-      var data = {};
-      var spkonseltxtfortabid = tabs[0].id+"spkonseltxt";
-      data[tabId] = seltxt;
-      data[spkonseltxtfortabid] = spkonseltxt;
-      data[tabs[0].id+"srclanguage"] = srclanguage;
-      data[tabs[0].id+"tgtlanguage"] = tgtlanguage;
+                document.getElementById("tgtlanguage").addEventListener("change", function() {
+                  var isChecked = document.getElementById("tgtlanguage").value;
+                  var newData = {};
+                  newData[tabId+"tgtlanguage"] = isChecked;
+                  chrome.storage.local.set(newData);
+                });
+                
 
-      chrome.storage.local.set(data, function () {
-        alert("Changed enabled ext to " + seltxt +" and Speak on Select to "+spkonseltxt);
-      });
-    });
   });
 
 });
@@ -408,4 +393,3 @@ function getStringFromJSON(url) {
     });
 
 }
-

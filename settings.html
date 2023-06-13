@@ -4,22 +4,33 @@
   </head>
   <body>
     <h1>Enable Select Settings</h1>
+    <!--
     <label for="seltxt">Select:</label>
     <select id="seltxt">
       <option value="No">No</option>            
       <option value="Yes">Yes</option>      
-      <!-- Add all the languages available in tts here -->
     </select>
     <br>
     <label for="spkonseltxt">Speak On Select:</label>
     <select id="spkonseltxt">
       <option value="No">No</option>            
       <option value="Yes">Yes</option>      
-      <!-- Add all the languages available in tts here -->
     </select>
     <br>    
+    -->
+
     <label>
-      <input type="checkbox" id="speakautocheckbox"> Speak Auto
+      <input type="checkbox" id="seltxt"> Select Popup Enabled
+    </label>
+    <br>        
+
+    <label>
+      <input type="checkbox" id="spkonseltxt"> Speak On Select
+    </label>
+    <br>        
+
+    <label>
+      <input type="checkbox" id="speakautocheckbox"> Detect Speech Lang
     </label>
     <br>        
 
@@ -36,6 +47,14 @@
       <option value="es-ES">Spanish (Spain)</option>
       <option value="de-DE">German (Germany)</option>
       <option value="it-IT">Italian (Italy)</option>
+      <option value="zh-CN">Chinese (Simplified)</option>
+      <option value="ko">Korean</option>            
+      <option value="hi-IN">Hindi</option>      
+      <option value="mr-IN">Marathi</option>      
+      <option value="kn-IN">Kannada</option>      
+      <option value="ml-IN">Malayalam</option>      
+      <option value="ta-IN">Tamil</option>
+      <option value="te-IN">Telugu</option>
       <!-- Add all the languages available in tts here -->
     </select>
 
@@ -47,10 +66,17 @@
       <option value="es-ES">Spanish (Spain)</option>
       <option value="de-DE">German (Germany)</option>
       <option value="it-IT">Italian (Italy)</option>
+      <option value="zh-CN">Chinese (Simplified)</option>     
+      <option value="ko">Korean</option>       
+      <option value="hi-IN">Hindi</option>      
+      <option value="mr-IN">Marathi</option>      
+      <option value="kn-IN">Kannada</option>   
+      <option value="ml-IN">Malayalam</option>         
+      <option value="ta-IN">Tamil</option>
+      <option value="te-IN">Telugu</option>
       <!-- Add all the languages available in tts here -->
     </select>
 
-    <button id="save">Save</button>    
     <script src="content.js"></script>
   </body>  
 </html>
