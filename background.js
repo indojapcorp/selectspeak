@@ -133,6 +133,12 @@ if(result.languages){
 
 
 function fetchDefinition(word, callback) {
+
+  const pattern = /(?:\r\n|\r|\n|\/|:)/;
+  if (pattern.test(word)) {
+    return;
+  }
+
   const url = `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`;
   fetch(url)
     .then((response) => response.json())
