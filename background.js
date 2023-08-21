@@ -35,10 +35,28 @@ chrome.contextMenus.create({
   enabled: false
 });
 
+/*
+chrome.contextMenus.create({
+  title: "Save as MP3",
+  contexts: ["selection"],
+  onclick: saveAsMP3
+});
+
+chrome.contextMenus.create({
+  id: 'saveAsMP3New',
+  title: 'Save as MP3 New',
+  contexts: ['selection']
+});
+*/
+
 document.head.innerHTML += "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script>"; 
 
 chrome.contextMenus.onClicked.addListener(function (info, tab) {
-  if (info.menuItemId === "stopSpeak") {
+  if (info.menuItemId === 'saveAsMP3New') {
+    var selectedText = info.selectionText;
+    saveAsMP3New(selectedText);
+  }
+  else if (info.menuItemId === "stopSpeak") {
     chrome.tts.stop();
   }else if (info.menuItemId === "speakTextAuto") {
   
@@ -74,9 +92,19 @@ if(result.languages){
 
   }else if (info.menuItemId === "recorder") {
     //chrome.tts.stop();
-    var win = window.open(
+    var popup = window.open(
       "https://indojapcorp.github.io/mediarecorder/", 'popUpWindow1', 'height=250,width=400,left=0,top=0,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=no');
-    win.focus();
+      popup.focus();
+      // Focus the popup window continuously
+  // var focusInterval = setInterval(function() {
+  //   if (popup && !popup.closed) {
+  //     popup.focus();
+  //   } else {
+  //     clearInterval(focusInterval);
+  //   }
+  // }, 200);
+
+
   }else if (info.menuItemId === "speechtotextstart"){
     chrome.contextMenus.update('speechtotextstart', { enabled: false });
     chrome.contextMenus.update('speechtotextstop', { enabled: true });
@@ -164,7 +192,6 @@ if (request.word) {
       var outputLang = "en";
       if (result && result.languages[0]) {
         outputLang = result.languages[0].language;
-        console.log("outputLang in word="+outputLang);
         if(outputLang!="ja" && outputLang!="zh"){
           fetchDefinition(request.word, (definition) => {
             sendResponse({ definition });
@@ -218,7 +245,6 @@ if (request.word) {
               outputLang="ja";
             }
             
-            console.log("outputLang="+outputLang);
             if(outputLang=="en"){
               chrome.tts.speak(textToSpeak, { lang: outputLang, voiceName: 'Alex'});
               
@@ -233,7 +259,6 @@ if (request.word) {
           }
         });
       }else{
-        console.log("tgtlanguage else="+tgtlanguage);
         chrome.tts.speak(textToSpeak, { lang: tgtlanguage });
       }
     });
@@ -310,3 +335,81 @@ chrome.tabs.onRemoved.addListener(function(tabId) {
   chrome.storage.local.remove(tabId.toString());
 });
 
+function saveAsMP3() {
+  chrome.tabs.executeScript({
+    code: 'window.getSelection().toString();'
+  }, function (selection) {
+    if (selection && selection[0]) {
+      var selectedText = selection[0];
+      var utterance = new SpeechSynthesisUtterance(selectedText);
+      var audio = new Audio();
+      var blobURL;
+
+      utterance.addEventListener('end', function () {
+        audio.src = blobURL;
+        var link = document.createElement('a');
+        link.href = blobURL;
+        link.download = 'text_to_speech.mp3';
+        link.click();
+        URL.revokeObjectURL(blobURL);
+      });
+
+      speechSynthesis.addEventListener('voiceschanged', function () {
+        var voices = speechSynthesis.getVoices();
+        utterance.voice = voices[0]; // You can choose a specific voice here if you have multiple voices installed.
+        var blob = new Blob([selectedText], { type: 'text/plain' });
+        blobURL = URL.createObjectURL(blob);
+        speechSynthesis.speak(utterance);    
+      });
+    }
+  });
+}
+
+function saveAsMP3New(selectedText) {
+  var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  var utterance = new SpeechSynthesisUtterance(selectedText);
+
+  var voicesChangedListener = function() {
+    speechSynthesis.removeEventListener('voiceschanged', voicesChangedListener);
+    var audioBuffer = audioCtx.createBufferSource();
+    var audioDestination = audioCtx.createMediaStreamDestination();
+    audioBuffer.buffer = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+    audioBuffer.connect(audioDestination);
+
+    utterance.voice = speechSynthesis.getVoices()[0];
+    utterance.addEventListener('end', function() {
+      audioCtx.resume().then(function() {
+        audioCtx.suspend().then(function() {
+          var audioStream = audioDestination.stream;
+          var mediaRecorder = new MediaRecorder(audioStream);
+          var chunks = [];
+
+          mediaRecorder.addEventListener('dataavailable', function(event) {
+            chunks.push(event.data);
+          });
+
+          mediaRecorder.addEventListener('stop', function() {
+            var blob = new Blob(chunks, { type: 'audio/mp3' });
+            var url = URL.createObjectURL(blob);
+            var link = document.createElement('a');
+            link.href = url;
+            link.download = 'text_to_speech.mp3';
+            link.click();
+            URL.revokeObjectURL(url);
+          });
+
+          mediaRecorder.start();
+          audioCtx.resume();
+          setTimeout(function() {
+            mediaRecorder.stop();
+            audioCtx.close();
+          }, 500);
+        });
+      });
+    });
+
+    speechSynthesis.speak(utterance);
+  };
+
+  speechSynthesis.addEventListener('voiceschanged', voicesChangedListener);
+}

@@ -183,8 +183,6 @@ if (chrome.runtime?.id) {
     if(response.spkonsel && response.spkonsel){
       const selection = window.getSelection();
       const selectedWord = selection.toString().trim();
-      console.log("here2");
-      console.log(selectedWord);
       speakText(selectedWord);
     }
 
