@@ -8,6 +8,9 @@
     "tabs",
     "tts",
     "storage",
+    "downloads",
+    "clipboardWrite",
+    "clipboardRead",
     "<all_urls>","http://*/*","https://*/*"
   ],
   "browser_action": {
@@ -17,12 +20,12 @@
   "content_scripts": [
     {      
       "matches": ["<all_urls>","http://*/*"],
-      "js": ["content.js"],
+      "js": ["content.js" , "kuroshiro.min.js", "kuroshiro-analyzer-kuromoji.min.js"],
       "run_at": "document_end"
     }
   ],
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["background.js" , "kuroshiro.min.js", "kuroshiro-analyzer-kuromoji.min.js"]
   },
   "web_accessible_resources": [
   "*.css"
