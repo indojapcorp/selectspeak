@@ -477,7 +477,7 @@ async function processLines() {
       // Translate each line
       const translatedText = await translateInBg(line, "ja-JP", "en-US");
 
-      console.log("translatedText==" + translatedText);
+      //console.log("translatedText==" + translatedText);
 
       // Push the converted line and translated text into convertedLines
       convertedLines.push(convertedLine + "<br>" + translatedText);
@@ -488,7 +488,7 @@ async function processLines() {
 
   // Join the lines back together with new lines
   const romajiText = convertedLines.join('<br>');
-  console.log(romajiText);
+  //console.log(romajiText);
   sendResponse({ romaji: romajiText });
 }
 
@@ -515,15 +515,11 @@ return true;
 let kuroshiroInstance = null;
 
 async function initializeKuroshiro() {
-  console.log("In initializeKuroshiro 1");
-
   kuroshiroInstance = new Kuroshiro();
-  console.log("In initializeKuroshiro 2");
   const analyzer = new KuromojiAnalyzer({ dictPath: "https://indojapcorp.github.io/TechNotes/tts/js/dict" });
-  console.log("In initializeKuroshiro 3");
 // kuroshiro2.init(analyzer);
   await kuroshiroInstance.init(analyzer);
-  console.log("In initializeKuroshiro 4");
+  console.log("In initializeKuroshiro");
 }
 
 async function translateInBg(sourceText, sourceLang, targetLang) {
@@ -532,7 +528,7 @@ async function translateInBg(sourceText, sourceLang, targetLang) {
   var url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=" + sourceLang + "&tl=" + targetLang + "&dt=t&q=" + encodeURI(sourceText);
   var translatedString;
   translatedString = await getStringFromJSON(url);
-  console.log("ddfdf="+translatedString);
+  //console.log("ddfdf="+translatedString);
   return translatedString;
 }
 

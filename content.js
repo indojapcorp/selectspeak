@@ -273,7 +273,7 @@ function handleMouseUp(event) {
     const xEnd = event.pageX;
 
 
-    console.log("selectedWord=" + selectedWord);
+   // console.log("selectedWord=" + selectedWord);
 
     const REGEX_CHINESE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
     const hasChinese = selectedWord.match(REGEX_CHINESE);
@@ -346,7 +346,6 @@ document.addEventListener("mouseup", (event) => {
 
   const selection = window.getSelection();
   const selectedWord = selection.toString().trim();
-  console.log("IN Mouse up");
   chrome.runtime.sendMessage({ saveSelectedTextToClipboard: selectedWord });
 
   // const writeOnSelectionCheckbox = document.getElementById('writeOnSelection');
@@ -366,7 +365,6 @@ document.addEventListener("mouseup", (event) => {
       }
 
       if (response && response.deflang && response.deflang) {
-        console.log("IN mouse up calling handleMouseUp");
         handleMouseUp(event);
       }
     });
@@ -377,7 +375,6 @@ document.addEventListener("mouseup", (event) => {
 
 
 document.addEventListener("mousedown", (event) => {
-  console.log("IN mouse down");
   var source = event.target || event.srcElement;
 
   if (source.id == 'speakButton' || source.id == 'stopSpeakButton' || source.id == 'translateButton' || source.id == 'speakTransButton') {
@@ -580,7 +577,7 @@ async function translate(sourceText, sourceLang, targetLang) {
   var translatedString;
 
   translatedString = await getStringFromJSON(url);
-  console.log("ddfdf="+translatedString);
+  //console.log("ddfdf="+translatedString);
   return translatedString;
   // getStringFromJSON(url)
   // .then(result => {
