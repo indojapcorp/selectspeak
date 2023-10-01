@@ -358,13 +358,16 @@ if (request.word) {
     //   sendResponse({ value: value });
     // });
     console.log("val in bg="+tabId)
-    chrome.storage.local.get([tabId+"gtcheckbox", tabId + "srclanguage", tabId + "tgtlanguage"], function(data) {
+    chrome.storage.local.get([tabId+"gtcheckbox", tabId + "srclanguage", tabId + "tgtlanguage", tabId + "gtcheckbox", tabId + "gtlbylcheckbox"], function(data) {
       var chkvalue = data[tabId + "gtcheckbox"] || "false";
+      var gtlbylcheckbox = data[tabId + "gtlbylcheckbox"] || "false";
+      var gtcheckbox = data[tabId + "gtcheckbox"] || "false";
       var srclanguage = data[tabId + "srclanguage"] || "en_US";
       var tgtlanguage = data[tabId + "tgtlanguage"] || "en_US";
-      console.log("chkvalue in bg="+chkvalue)
+
+      console.log("gtlbylcheckbox in bg="+gtlbylcheckbox)
       // Send the language values back to the content script
-      sendResponse({ chkvalue: chkvalue, srclanguage: srclanguage, tgtlanguage: tgtlanguage });
+      sendResponse({ chkvalue: chkvalue, srclanguage: srclanguage, tgtlanguage: tgtlanguage,gtcheckbox: gtcheckbox ,gtlbylcheckbox: gtlbylcheckbox });
     });
 
    // console.log("returning false")
@@ -429,11 +432,28 @@ if (request.word) {
       }
         
 
-      // Split the text into lines
-const alllines = request.showRomaji.split(/\r?\n/);
+      console.log("In bg request.showRomaji="+request.showRomaji);
 
+      // Split the text into lines
+
+
+
+
+console.log("In bg gtlbylcheckbox="+request.gtlbylcheckbox);
 // Take a maximum of the first 50 lines
-const lines = alllines.slice(0, 30);
+var lines = [];
+if(request.gtlbylcheckbox === true){
+  console.log("In bg gtlbylcheckbox====true");
+  var alllines = request.showRomaji.split(/\r?\n/);  
+  lines = alllines.slice(0, 30);
+}else{
+  console.log("In bg gtlbylcheckbox====false");
+
+  lines.push(request.showRomaji);
+}
+
+//var lines = request.gtlbylcheckbox?alllines.slice(0, 30):alllines;
+console.log("In bg lines="+lines);
 
 const convertedLines = [];
 
@@ -488,7 +508,7 @@ async function processLines() {
 
   // Join the lines back together with new lines
   const romajiText = convertedLines.join('<br>');
-  //console.log(romajiText);
+  console.log(romajiText);
   sendResponse({ romaji: romajiText });
 }
 

@@ -283,13 +283,29 @@ function handleMouseUp(event) {
     if (containsJapaneseCharacters(selectedWord)) {
 
       chrome.runtime.sendMessage({ initKuroshiro: "" });
+      console.log("content gtlbylcheckbox="+gtlbylcheckbox);
 
-      chrome.runtime.sendMessage({ showRomaji: selectedWord}, (response) => {
+  //     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+  //       var tabId = tabs[0].id;
+  // chrome.storage.local.get([tabId+"gtlbylcheckbox"], function(data) {
+  //   var gtlbylcheckbox2 = data[tabId + "gtlbylcheckbox"] || "false";
+
+
+  // });
+  //     });
+  chrome.runtime.sendMessage({ message: 'getTranslationValues'}, (response) => {
+
+    if (response && response.gtlbylcheckbox !== undefined) {
+
+      chrome.runtime.sendMessage({ showRomaji: selectedWord , gtlbylcheckbox: response.gtlbylcheckbox}, (response) => {
 
         if (response && response.romaji) {
           showDefinitionPopup(selectedWord, response.romaji, x + 5, y + 10, true);
         }
       });
+    }
+    });
+
 
       //var kuroshiro = new Kuroshiro();
       // kuroshiro2.init(new KuromojiAnalyzer({ dictPath: "https://indojapcorp.github.io/TechNotes/tts/js/dict" }))
@@ -342,61 +358,53 @@ function handleMouseUp(event) {
 
 //document.addEventListener("mouseup", handleMouseUp);
 
-document.addEventListener("mouseup", (event) => {
-
-  const selection = window.getSelection();
-  const selectedWord = selection.toString().trim();
-  chrome.runtime.sendMessage({ saveSelectedTextToClipboard: selectedWord });
-
-  // const writeOnSelectionCheckbox = document.getElementById('writeOnSelection');
-  // console.log(selectedWord);
-  // if(writeOnSelectionCheckbox.checked){
-  //   chrome.runtime.sendMessage({ saveSelectedTextToClipboard: selectedWord });
-  // }
-
-  if (chrome.runtime?.id) {
-
-    chrome.runtime.sendMessage({ slttxtval: "abc" }, (response) => {
-
-      if (response.spkonsel && response.spkonsel) {
-        const selection = window.getSelection();
-        const selectedWord = selection.toString().trim();
-        speakText(selectedWord);
-      }
-
-      if (response && response.deflang && response.deflang) {
-        handleMouseUp(event);
-      }
-    });
-  }
-
-});
 
 
 
-document.addEventListener("mousedown", (event) => {
-  var source = event.target || event.srcElement;
+let speakautocheckbox = false;
+let seltxt = false ;
+let spkonseltxt = false ;
+let srclanguage =  "en-US";
+let tgtlanguage = "en-US";
+let speaklanguage = "en-US";
+let gtcheckbox = false ;
+let gtlbylcheckbox = false ;
+let writeOnSelection= false ;
 
-  if (source.id == 'speakButton' || source.id == 'stopSpeakButton' || source.id == 'translateButton' || source.id == 'speakTransButton') {
-  }
-  else if (event.button === 0 && currentWord) {
-    if (source.id != 'speakButton' && source.id != 'stopSpeakButton' || source.id != 'translateButton' || source.id != 'speakTransButton') {
-      event.preventDefault();
-      currentWord = null;
-      var selection = window.getSelection();
-      selection.removeAllRanges();
-      removeDefinitionPopup();
-    }
-  }
-  else {
-    removeDefinitionPopup();
-  }
-});
+// const loadSettingsPromise = new Promise((resolve) => {
+
+// chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+//   var tabId = tabs[0].id;
+//   chrome.storage.local.get([tabId.toString(), tabId + "speakautocheckbox", tabId + "seltxt", tabId + "spkonseltxt", tabId + "gtcheckbox", tabId + "srclanguage", tabId + "tgtlanguage", tabId + "speaklanguage", tabId + "fileLocation", tabId + "writeOnSelection", tabId + "gtlbylcheckbox"], function (data) {
+//     speakautocheckbox =  data[tabs[0].id +  "speakautocheckbox"];
+//     seltxt =  data[tabs[0].id + "seltxt"];
+//     spkonseltxt = data[tabs[0].id + "spkonseltxt"];
+//     srclanguage = data[tabs[0].id + "srclanguage"] || "en-US";
+//     tgtlanguage = data[tabs[0].id + "tgtlanguage"] || "en-US";
+//     speaklanguage = data[tabs[0].id + "speaklanguage"] || "en-US";
+//     gtcheckbox = data[tabs[0].id + "gtcheckbox"];
+//     gtlbylcheckbox = data[tabs[0].id + "gtlbylcheckbox"];
+//     speakautocheckbox = data[tabs[0].id + "speakautocheckbox"];
+//     writeOnSelection = data[tabs[0].id + "writeOnSelection"];
+//     resolve(); // Resolve the promise once settings are loaded
+
+//   });
+// });
+
+// });
+
+
+// loadSettingsPromise.then(() => {
+//   console.log("resolved====");
+// });
 
 var win;
 var gtcheckboxEnabled = false;
+
 document.addEventListener("DOMContentLoaded", function () {
 
+
+  console.log("srclanguage===="+srclanguage);
   // if(!win){
   // win = window.open(
   //   "https://indojapcorp.github.io/mediarecorder/", 'popUpWindow1', 'height=250,width=400,left=0,top=0,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=no');
@@ -409,22 +417,36 @@ document.addEventListener("DOMContentLoaded", function () {
     var tabId = tabs[0].id;
     var spkonseltxtfortabid = tabs[0].id + "spkonseltxt";
 
-
-
-    chrome.storage.local.get([tabId.toString(), tabId + "speakautocheckbox", tabId + "seltxt", tabId + "spkonseltxt", tabId + "gtcheckbox", tabId + "srclanguage", tabId + "tgtlanguage", tabId + "speaklanguage", tabId + "fileLocation", tabId + "writeOnSelection"], function (data) {
+    chrome.storage.local.get([tabId.toString(), tabId + "speakautocheckbox", tabId + "seltxt", tabId + "spkonseltxt", tabId + "gtcheckbox", tabId + "srclanguage", tabId + "tgtlanguage", tabId + "speaklanguage", tabId + "fileLocation", tabId + "writeOnSelection", tabId + "gtlbylcheckbox"], function (data) {
       document.getElementById("seltxt").checked = data[tabs[0].id + "seltxt"];
       document.getElementById("spkonseltxt").checked = data[tabs[0].id + "spkonseltxt"];
       document.getElementById("srclanguage").value = data[tabs[0].id + "srclanguage"] || "en-US";
       document.getElementById("tgtlanguage").value = data[tabs[0].id + "tgtlanguage"] || "ja-JP";
       document.getElementById("speaklanguage").value = data[tabs[0].id + "srclanguage"] || "en-US";      
       document.getElementById("gtcheckbox").checked = data[tabId + "gtcheckbox"];
+      document.getElementById("gtlbylcheckbox").checked = data[tabId + "gtlbylcheckbox"];
       document.getElementById("speakautocheckbox").checked = data[tabId + "speakautocheckbox"];
       document.getElementById("writeOnSelection").checked = data[tabId + "writeOnSelection"];
+
+      speakautocheckbox =  data[tabs[0].id +  "speakautocheckbox"];
+      seltxt =  data[tabs[0].id + "seltxt"];
+      spkonseltxt = data[tabs[0].id + "spkonseltxt"];
+      srclanguage = data[tabs[0].id + "srclanguage"] || "en-US";
+      tgtlanguage = data[tabs[0].id + "tgtlanguage"] || "en-US";
+      speaklanguage = data[tabs[0].id + "speaklanguage"] || "en-US";
+      gtcheckbox = data[tabs[0].id + "gtcheckbox"];
+      gtlbylcheckbox = data[tabs[0].id + "gtlbylcheckbox"];
+      console.log("gtlbylcheckbox from local="+gtlbylcheckbox);
+      speakautocheckbox = data[tabs[0].id + "speakautocheckbox"];
+      writeOnSelection = data[tabs[0].id + "writeOnSelection"];
+  
     });
 
     document.getElementById("writeOnSelection").addEventListener("change", function () {
       var isChecked = document.getElementById("writeOnSelection").checked;
       gtcheckboxEnabled = isChecked;
+
+      writeOnSelection = isChecked;
 
       var newData = {};
       newData[tabId + "writeOnSelection"] = isChecked;
@@ -463,7 +485,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("seltxt").addEventListener("change", function () {
       var isChecked = document.getElementById("seltxt").checked;
       gtcheckboxEnabled = isChecked;
-
+      seltxt = isChecked;
       var newData = {};
       newData[tabId + "seltxt"] = isChecked;
       chrome.storage.local.set(newData);
@@ -473,7 +495,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("spkonseltxt").addEventListener("change", function () {
       var isChecked = document.getElementById("spkonseltxt").checked;
       gtcheckboxEnabled = isChecked;
-
+      spkonseltxt = isChecked;
       var newData = {};
       newData[tabId + "spkonseltxt"] = isChecked;
       chrome.storage.local.set(newData);
@@ -484,18 +506,28 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("gtcheckbox").addEventListener("change", function () {
       var isChecked = document.getElementById("gtcheckbox").checked;
       gtcheckboxEnabled = isChecked;
-
+      gtcheckbox = isChecked;
       var newData = {};
       newData[tabId + "gtcheckbox"] = isChecked;
       chrome.storage.local.set(newData);
     });
 
+    // Save the checkbox value for the current tab when it changes
+    document.getElementById("gtlbylcheckbox").addEventListener("change", function () {
+      var isChecked = document.getElementById("gtlbylcheckbox").checked;
+      gtcheckboxEnabled = isChecked;
+      gtlbylcheckbox = isChecked;
+      var newData = {};
+      newData[tabId + "gtlbylcheckbox"] = isChecked;
+      chrome.storage.local.set(newData);
+    });
 
 
     // Save the checkbox value for the current tab when it changes
     document.getElementById("speakautocheckbox").addEventListener("change", function () {
       var isChecked = document.getElementById("speakautocheckbox").checked;
       var newData = {};
+      speakautocheckbox = isChecked;
       newData[tabId + "speakautocheckbox"] = isChecked;
       chrome.storage.local.set(newData);
     });
@@ -503,13 +535,16 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("srclanguage").addEventListener("change", function () {
       var isChecked = document.getElementById("srclanguage").value;
       var newData = {};
+      srclanguage = isChecked;
       newData[tabId + "srclanguage"] = isChecked;
+      console.log("Setting src lang="+isChecked);
       chrome.storage.local.set(newData);
     });
 
     document.getElementById("tgtlanguage").addEventListener("change", function () {
       var isChecked = document.getElementById("tgtlanguage").value;
       var newData = {};
+      tgtlanguage = isChecked;
       newData[tabId + "tgtlanguage"] = isChecked;
       chrome.storage.local.set(newData);
     });
@@ -517,6 +552,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("speaklanguage").addEventListener("change", function () {
       var isChecked = document.getElementById("speaklanguage").value;
       var newData = {};
+      speaklanguage = isChecked;
       newData[tabId + "speaklanguage"] = isChecked;
       chrome.storage.local.set(newData);
     });
@@ -536,7 +572,55 @@ document.addEventListener("DOMContentLoaded", function () {
 
   //chrome.runtime.sendMessage({ action: "initKuroshiro" });
 
+
+
+
+
 });
+
+document.addEventListener("mouseup", (event) => {
+
+  const selection = window.getSelection();
+  const selectedWord = selection.toString().trim();
+  chrome.runtime.sendMessage({ saveSelectedTextToClipboard: selectedWord });
+  
+  if (chrome.runtime?.id) {
+
+    chrome.runtime.sendMessage({ slttxtval: "abc" }, (response) => {
+
+      if (response.spkonsel && response.spkonsel) {
+        const selection = window.getSelection();
+        const selectedWord = selection.toString().trim();
+        speakText(selectedWord);
+      }
+
+      if (response && response.deflang && response.deflang) {
+        handleMouseUp(event);
+      }
+    });
+  }
+
+});
+
+document.addEventListener("mousedown", (event) => {
+  var source = event.target || event.srcElement;
+
+  if (source.id == 'speakButton' || source.id == 'stopSpeakButton' || source.id == 'translateButton' || source.id == 'speakTransButton') {
+  }
+  else if (event.button === 0 && currentWord) {
+    if (source.id != 'speakButton' && source.id != 'stopSpeakButton' || source.id != 'translateButton' || source.id != 'speakTransButton') {
+      event.preventDefault();
+      currentWord = null;
+      var selection = window.getSelection();
+      selection.removeAllRanges();
+      removeDefinitionPopup();
+    }
+  }
+  else {
+    removeDefinitionPopup();
+  }
+});
+
 let lang = "ja";
 let utterance = null;
 
