@@ -7,8 +7,8 @@ let currentWord = null;
 
 function createDefinitionPopup(selectedWord, definition, showdef) {
 
-  console.log("selectedWord="+selectedWord);
-  console.log("definition="+definition);
+  console.log("selectedWord=" + selectedWord);
+  console.log("definition=" + definition);
   removeDefinitionPopup();
   const popup = document.createElement("div");
   popup.setAttribute("id", "popup");
@@ -104,19 +104,19 @@ function createDefinitionPopup(selectedWord, definition, showdef) {
   popupButtons.appendChild(closeButton);
 
 
-    // Create a "Speak" button to speak the definition
-    const speakTransButton = document.createElement("button");
-    speakTransButton.setAttribute("id", "speakTransButton");
-    speakTransButton.classList.add('dictionary-popup-speak-button');
-    speakTransButton.textContent = "Speak Trans";
-    speakTransButton.addEventListener("click", () => {
-     // speakText(definition);
-     console.log("definition bef tgttext="+definition);
-      speakTextTgtText(definition);
-    });
-    popupButtons.appendChild(speakTransButton);
+  // Create a "Speak" button to speak the definition
+  const speakTransButton = document.createElement("button");
+  speakTransButton.setAttribute("id", "speakTransButton");
+  speakTransButton.classList.add('dictionary-popup-speak-button');
+  speakTransButton.textContent = "Speak Trans";
+  speakTransButton.addEventListener("click", () => {
+    // speakText(definition);
+    console.log("definition bef tgttext=" + definition);
+    speakTextTgtText(definition);
+  });
+  popupButtons.appendChild(speakTransButton);
 
-    
+
   // Create a "Speak" button to speak the definition
   const translateButton = document.createElement("button");
   translateButton.setAttribute("id", "translateButton");
@@ -125,43 +125,43 @@ function createDefinitionPopup(selectedWord, definition, showdef) {
   translateButton.addEventListener("click", () => {
     console.log("Before calling translate="); // Log the value of translatedVal
 
-        // Send a message to the background script requesting the checkbox value
-        chrome.runtime.sendMessage({ message: "getTranslationValues" }, function (response) {
-          if (response && response.chkvalue !== undefined) {
-            var isChecked = response.chkvalue;
-    
-            if (isChecked) {
-              var translatedVal;
-              //translate(selectedWord,"en","ja")
-              translate(selectedWord, response.srclanguage, response.tgtlanguage)
-                .then(result => {
-                  definition = result; // Assign the result to the global variable
-                  console.log("translatedVal="+definition); // Log the value of translatedVal
+    // Send a message to the background script requesting the checkbox value
+    chrome.runtime.sendMessage({ message: "getTranslationValues" }, function (response) {
+      if (response && response.chkvalue !== undefined) {
+        var isChecked = response.chkvalue;
 
-                  var popuptrasnText = document.getElementById('popuptrasnTextDiv');
-                  if(!popuptrasnText){
-                    popuptrasnText = document.createElement("div");
-                    popuptrasnText.setAttribute("id", "popuptrasnTextDiv");
-                    popuptrasnText.className = "dictionary-popup-text";
-                    const s = popuptrasnText.style;
-                    s.whiteSpace = 'pre';  // <-- Right here.                  
-                    popuptrasnText.textContent = definition;  
-                    popup.appendChild(popuptrasnText);
-                  }else{
-                    popuptrasnText.textContent = definition;  
-                  }
-                  // const popuptrasnText = document.createElement("div");
-                  // popuptrasnText.setAttribute("id", "popuptrasnTextDiv");
-                  // popuptrasnText.className = "dictionary-popup-text";
-                  // const s = popuptrasnText.style;
-                  // s.whiteSpace = 'pre';  // <-- Right here.                  
-                  // popuptrasnText.textContent = definition;
-                  //popup.appendChild(popuptrasnText);
-                });
-            }
-            // Use the value as needed
-          }
-        });
+        if (isChecked) {
+          var translatedVal;
+          //translate(selectedWord,"en","ja")
+          translate(selectedWord, response.srclanguage, response.tgtlanguage)
+            .then(result => {
+              definition = result; // Assign the result to the global variable
+              console.log("translatedVal=" + definition); // Log the value of translatedVal
+
+              var popuptrasnText = document.getElementById('popuptrasnTextDiv');
+              if (!popuptrasnText) {
+                popuptrasnText = document.createElement("div");
+                popuptrasnText.setAttribute("id", "popuptrasnTextDiv");
+                popuptrasnText.className = "dictionary-popup-text";
+                const s = popuptrasnText.style;
+                s.whiteSpace = 'pre';  // <-- Right here.                  
+                popuptrasnText.textContent = definition;
+                popup.appendChild(popuptrasnText);
+              } else {
+                popuptrasnText.textContent = definition;
+              }
+              // const popuptrasnText = document.createElement("div");
+              // popuptrasnText.setAttribute("id", "popuptrasnTextDiv");
+              // popuptrasnText.className = "dictionary-popup-text";
+              // const s = popuptrasnText.style;
+              // s.whiteSpace = 'pre';  // <-- Right here.                  
+              // popuptrasnText.textContent = definition;
+              //popup.appendChild(popuptrasnText);
+            });
+        }
+        // Use the value as needed
+      }
+    });
     // //speakText(selectedWord+"..."+definition.replace(/(?:\r\n|\r|\n|\/)/g, '...'));
     // if (showdef) {
     //   //speakText(selectedWord + "..." + definition);
@@ -247,64 +247,67 @@ function handleMouseUp(event) {
     currentWord = null;
   }
   const selection = window.getSelection();
+  if(selection.toString().trim() === "")
+    return;
+
   const lines = selection.toString().trim().split(/\r?\n/);
 
   //var selectedWord = selection.toString().trim();
 
   // Filter lines to remove those containing only numeric text or "NEW"
   const filteredLines = lines.filter((line) => {
-  // Remove leading and trailing whitespace
-  const trimmedLine = line.trim();
+    // Remove leading and trailing whitespace
+    const trimmedLine = line.trim();
 
-  // Check if the line is not "NEW" and is not a numeric value
-  return trimmedLine !== "NEW" && !/^\d+$/.test(trimmedLine);
+    // Check if the line is not "NEW" and is not a numeric value
+    return trimmedLine !== "NEW" && !/^\d+$/.test(trimmedLine);
   });
 
   // Join the filtered lines back together with new lines
   const selectedWord = filteredLines.join('\n');
 
 
+  chrome.runtime.sendMessage({ message: 'getTranslationValues' }, (response) => {
+
+    let storedsrclanguage = response.srclanguage;
+    let storedtgtlanguage = response.tgtlanguage;
+
   if (selectedWord) {
     currentWord = selectedWord;
     //const x = event.pageX;
-    const y = event.pageY+2;
+    const y = event.pageY + 2;
 
     const x = getSelectionXStart(selection);
     const xEnd = event.pageX;
 
 
-   // console.log("selectedWord=" + selectedWord);
+    // console.log("selectedWord=" + selectedWord);
 
     const REGEX_CHINESE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
     const hasChinese = selectedWord.match(REGEX_CHINESE);
 
     console.log("hasJapChinese=" + containsJapaneseCharacters(selectedWord));
 
-    if (containsJapaneseCharacters(selectedWord)) {
+    //if (containsJapaneseCharacters(selectedWord)) {
+    if(!storedsrclanguage.startsWith("en-")){
 
-      chrome.runtime.sendMessage({ initKuroshiro: "" });
-      console.log("content gtlbylcheckbox="+gtlbylcheckbox);
+      if(storedsrclanguage.startsWith("ja-")){
 
-  //     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-  //       var tabId = tabs[0].id;
-  // chrome.storage.local.get([tabId+"gtlbylcheckbox"], function(data) {
-  //   var gtlbylcheckbox2 = data[tabId + "gtlbylcheckbox"] || "false";
+      chrome.runtime.sendMessage({ message: 'initKuroshiro' });
+      console.log("content gtlbylcheckbox=" + gtlbylcheckbox);
+      }
+//      chrome.runtime.sendMessage({ message: 'getTranslationValues' }, (response) => {
 
+        if (response && response.gtlbylcheckbox !== undefined) {
 
-  // });
-  //     });
-  chrome.runtime.sendMessage({ message: 'getTranslationValues'}, (response) => {
+          chrome.runtime.sendMessage({ showRomaji: selectedWord, gtlbylcheckbox: response.gtlbylcheckbox , storedsrclanguage:storedsrclanguage , storedtgtlanguage:storedtgtlanguage }, (response) => {
 
-    if (response && response.gtlbylcheckbox !== undefined) {
-
-      chrome.runtime.sendMessage({ showRomaji: selectedWord , gtlbylcheckbox: response.gtlbylcheckbox}, (response) => {
-
-        if (response && response.romaji) {
-          showDefinitionPopup(selectedWord, response.romaji, x + 5, y + 10, true);
+            if (response && response.romaji) {
+              showDefinitionPopup(selectedWord, response.romaji, x + 5, y + 10, true);
+            }
+          });
         }
-      });
-    }
-    });
+//      });
 
 
       //var kuroshiro = new Kuroshiro();
@@ -321,10 +324,10 @@ function handleMouseUp(event) {
     } else {
 
 
-      if (!containsWhitespace(selectedWord)) {
+      if (!containsWhitespace(selectedWord) && storedsrclanguage.startsWith("en_")) {
         chrome.runtime.sendMessage({ word: selectedWord }, (response) => {
           if (response && response.definition) {
-            showDefinitionPopup(selectedWord +"..."+response.definition, response.definition, x + 5, y + 10, true);
+            showDefinitionPopup(selectedWord + "..." + response.definition, response.definition, x + 5, y + 10, true);
           } else if (response) {
             showDefinitionPopup(selectedWord, "", x + 5, y + 10, true);
           }
@@ -337,12 +340,12 @@ function handleMouseUp(event) {
 
     chrome.runtime.sendMessage({ action: "getWriteOnSelection" }, function (response) {
 
-      if(response.writeOnSelection){
+      if (response.writeOnSelection) {
         chrome.tabs.sendMessage(sender.tab.id, { action: 'saveSelectedTextToClipboard', selectedWord });
       }
     });
 
-    
+
     // const writeOnSelectionCheckbox = document.getElementById('writeOnSelection');
     // console.log(selectedWord);
     // if (writeOnSelectionCheckbox.checked) {
@@ -354,6 +357,9 @@ function handleMouseUp(event) {
     // });
 
   }
+
+});
+
 }
 
 //document.addEventListener("mouseup", handleMouseUp);
@@ -362,14 +368,14 @@ function handleMouseUp(event) {
 
 
 let speakautocheckbox = false;
-let seltxt = false ;
-let spkonseltxt = false ;
-let srclanguage =  "en-US";
+let seltxt = false;
+let spkonseltxt = false;
+let srclanguage = "en-US";
 let tgtlanguage = "en-US";
 let speaklanguage = "en-US";
-let gtcheckbox = false ;
-let gtlbylcheckbox = false ;
-let writeOnSelection= false ;
+let gtcheckbox = false;
+let gtlbylcheckbox = false;
+let writeOnSelection = false;
 
 // const loadSettingsPromise = new Promise((resolve) => {
 
@@ -404,7 +410,7 @@ var gtcheckboxEnabled = false;
 document.addEventListener("DOMContentLoaded", function () {
 
 
-  console.log("srclanguage===="+srclanguage);
+  console.log("srclanguage====" + srclanguage);
   // if(!win){
   // win = window.open(
   //   "https://indojapcorp.github.io/mediarecorder/", 'popUpWindow1', 'height=250,width=400,left=0,top=0,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=no');
@@ -422,24 +428,24 @@ document.addEventListener("DOMContentLoaded", function () {
       document.getElementById("spkonseltxt").checked = data[tabs[0].id + "spkonseltxt"];
       document.getElementById("srclanguage").value = data[tabs[0].id + "srclanguage"] || "en-US";
       document.getElementById("tgtlanguage").value = data[tabs[0].id + "tgtlanguage"] || "ja-JP";
-      document.getElementById("speaklanguage").value = data[tabs[0].id + "srclanguage"] || "en-US";      
+      document.getElementById("speaklanguage").value = data[tabs[0].id + "srclanguage"] || "en-US";
       document.getElementById("gtcheckbox").checked = data[tabId + "gtcheckbox"];
       document.getElementById("gtlbylcheckbox").checked = data[tabId + "gtlbylcheckbox"];
       document.getElementById("speakautocheckbox").checked = data[tabId + "speakautocheckbox"];
       document.getElementById("writeOnSelection").checked = data[tabId + "writeOnSelection"];
 
-      speakautocheckbox =  data[tabs[0].id +  "speakautocheckbox"];
-      seltxt =  data[tabs[0].id + "seltxt"];
+      speakautocheckbox = data[tabs[0].id + "speakautocheckbox"];
+      seltxt = data[tabs[0].id + "seltxt"];
       spkonseltxt = data[tabs[0].id + "spkonseltxt"];
       srclanguage = data[tabs[0].id + "srclanguage"] || "en-US";
       tgtlanguage = data[tabs[0].id + "tgtlanguage"] || "en-US";
       speaklanguage = data[tabs[0].id + "speaklanguage"] || "en-US";
       gtcheckbox = data[tabs[0].id + "gtcheckbox"];
       gtlbylcheckbox = data[tabs[0].id + "gtlbylcheckbox"];
-      console.log("gtlbylcheckbox from local="+gtlbylcheckbox);
+      console.log("gtlbylcheckbox from local=" + gtlbylcheckbox);
       speakautocheckbox = data[tabs[0].id + "speakautocheckbox"];
       writeOnSelection = data[tabs[0].id + "writeOnSelection"];
-  
+
     });
 
     document.getElementById("writeOnSelection").addEventListener("change", function () {
@@ -537,7 +543,7 @@ document.addEventListener("DOMContentLoaded", function () {
       var newData = {};
       srclanguage = isChecked;
       newData[tabId + "srclanguage"] = isChecked;
-      console.log("Setting src lang="+isChecked);
+      console.log("Setting src lang=" + isChecked);
       chrome.storage.local.set(newData);
     });
 
@@ -583,7 +589,7 @@ document.addEventListener("mouseup", (event) => {
   const selection = window.getSelection();
   const selectedWord = selection.toString().trim();
   chrome.runtime.sendMessage({ saveSelectedTextToClipboard: selectedWord });
-  
+
   if (chrome.runtime?.id) {
 
     chrome.runtime.sendMessage({ slttxtval: "abc" }, (response) => {
@@ -635,8 +641,8 @@ function speakText(text) {
 function speakTextTgtText(text) {
 
   if (!text) return;
-  console.log("speakTextTgtText="+text);
-  chrome.runtime.sendMessage({ speak: text ,speaklang: "tgtlang"}, (response) => {
+  console.log("speakTextTgtText=" + text);
+  chrome.runtime.sendMessage({ speak: text, speaklang: "tgtlang" }, (response) => {
 
   });
 }

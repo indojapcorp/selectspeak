@@ -63,87 +63,87 @@ chrome.contextMenus.create({
 
 
 
-document.head.innerHTML += "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script>"; 
+document.head.innerHTML += "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script>";
 
 chrome.contextMenus.onClicked.addListener(function (info, tab) {
 
   if (info.menuItemId === 'writeSelectionToClipboard') {
     var selectedText = info.selectionText;
-    console.log("writeSelectionToClipboard="+selectedText);
-      if (selectedText) {
-        chrome.tabs.sendMessage(sender.tab.id, { action: 'saveSelectedTextToClipboard', selectedText });
+    console.log("writeSelectionToClipboard=" + selectedText);
+    if (selectedText) {
+      chrome.tabs.sendMessage(sender.tab.id, { action: 'saveSelectedTextToClipboard', selectedText });
 
-        //saveSelectedTextToClipboard(selectedText);
-        //chrome.runtime.sendMessage({ action: 'saveSelectedText', text: selectedText });
-      }  
+      //saveSelectedTextToClipboard(selectedText);
+      //chrome.runtime.sendMessage({ action: 'saveSelectedText', text: selectedText });
+    }
 
-  }else if (info.menuItemId === 'downloadFromClipboard') {
+  } else if (info.menuItemId === 'downloadFromClipboard') {
 
     downloadClipboardText();
 
-  }else if (info.menuItemId === 'saveAsMP3New') {
+  } else if (info.menuItemId === 'saveAsMP3New') {
     var selectedText = info.selectionText;
     saveAsMP3New(selectedText);
   }
   else if (info.menuItemId === "stopSpeak") {
     chrome.tts.stop();
-  }else if (info.menuItemId === "speakTextAuto") {
-  
-  	var outputLang = "en";
-chrome.i18n.detectLanguage(info.selectionText, function(result) {
-if(result.languages){
-	outputLang = result.languages[0].language;
-	        chrome.tts.speak(info.selectionText.replace(/(?:\r\n|\r|\n|\/|:)/g, '...'), { lang: outputLang });
+  } else if (info.menuItemId === "speakTextAuto") {
 
-}
-  });
-  }else if (info.menuItemId === "speakText") {
-  
+    var outputLang = "en";
+    chrome.i18n.detectLanguage(info.selectionText, function (result) {
+      if (result.languages) {
+        outputLang = result.languages[0].language;
+        chrome.tts.speak(info.selectionText.replace(/(?:\r\n|\r|\n|\/|:)/g, '...'), { lang: outputLang });
+
+      }
+    });
+  } else if (info.menuItemId === "speakText") {
+
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       var tabId = tabs[0].id;
-  	var outputLang = "en";
+      var outputLang = "en";
 
-    chrome.storage.local.get([tabId+"speakautocheckbox", tabId + "srclanguage", tabId + "tgtlanguage", tabId + "speaklanguage"], function(data) {
+      chrome.storage.local.get([tabId + "speakautocheckbox", tabId + "srclanguage", tabId + "tgtlanguage", tabId + "speaklanguage"], function (data) {
 
-      var speakautocheckbox = data[tabId + "speakautocheckbox"] || false;
-      var speaklanguage = data[tabId + "speaklanguage"] || "en_US";
+        var speakautocheckbox = data[tabId + "speakautocheckbox"] || false;
+        var speaklanguage = data[tabId + "speaklanguage"] || "en_US";
 
-      if(srclanguage=="en_US"){
-        chrome.tts.speak(info.selectionText, { lang: srclanguage, voiceName: 'Alex'});
-        
-      }else{
+        if (srclanguage == "en_US") {
+          chrome.tts.speak(info.selectionText, { lang: srclanguage, voiceName: 'Alex' });
 
-      chrome.tts.speak(info.selectionText.replace(/(?:\r\n|\r|\n|\/|:)/g, '...'), { lang: speaklanguage });
-      }
+        } else {
 
+          chrome.tts.speak(info.selectionText.replace(/(?:\r\n|\r|\n|\/|:)/g, '...'), { lang: speaklanguage });
+        }
+
+      });
     });
-  });
 
-  }else if (info.menuItemId === "recorder") {
+  } else if (info.menuItemId === "recorder") {
     //chrome.tts.stop();
     var popup = window.open(
       "https://indojapcorp.github.io/mediarecorder/", 'popUpWindow1', 'height=250,width=400,left=0,top=0,resizable=yes,scrollbars=yes,toolbar=no,menubar=no,location=no,directories=no,status=no');
-      popup.focus();
-      // Focus the popup window continuously
-  // var focusInterval = setInterval(function() {
-  //   if (popup && !popup.closed) {
-  //     popup.focus();
-  //   } else {
-  //     clearInterval(focusInterval);
-  //   }
-  // }, 200);
+    popup.focus();
+    // Focus the popup window continuously
+    // var focusInterval = setInterval(function() {
+    //   if (popup && !popup.closed) {
+    //     popup.focus();
+    //   } else {
+    //     clearInterval(focusInterval);
+    //   }
+    // }, 200);
 
 
-  }else if (info.menuItemId === "speechtotextstart"){
+  } else if (info.menuItemId === "speechtotextstart") {
     chrome.contextMenus.update('speechtotextstart', { enabled: false });
     chrome.contextMenus.update('speechtotextstop', { enabled: true });
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       var tabId = tabs[0].id;
-   // chrome.tabs.executeScript(tab.id, { code: 'setSpeechLanguage("en");' });
-   chrome.storage.local.get(tabId+'srclanguage', function(data) {
-    var srclanguage = data[tabId + "srclanguage"] || "en_US";
-   chrome.tabs.executeScript(tab.id, {
-    code: `
+      // chrome.tabs.executeScript(tab.id, { code: 'setSpeechLanguage("en");' });
+      chrome.storage.local.get(tabId + 'srclanguage', function (data) {
+        var srclanguage = data[tabId + "srclanguage"] || "en_US";
+        chrome.tabs.executeScript(tab.id, {
+          code: `
       if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
         const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
         recognition.continuous = true;
@@ -178,10 +178,10 @@ if(result.languages){
         console.log('Speech recognition not supported');
       }
     `
-  });
-   });
-  });
-  }else if (info.menuItemId === "speechtotextstop"){
+        });
+      });
+    });
+  } else if (info.menuItemId === "speechtotextstop") {
     chrome.tabs.executeScript(tab.id, { code: 'stopSpeechRecognition();' });
     chrome.contextMenus.update('speechtotextstart', { enabled: true });
     chrome.contextMenus.update('speechtotextstop', { enabled: false });
@@ -214,17 +214,17 @@ function fetchDefinition(word, callback) {
 //var spkonsleval;
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
-if (request.word) {
+  if (request.word) {
 
     chrome.i18n.detectLanguage(request.word, function (result) {
 
       var outputLang = "en";
       if (result && result.languages[0]) {
         outputLang = result.languages[0].language;
-        if(outputLang!="ja" && outputLang!="zh"){
+        if (outputLang != "ja" && outputLang != "zh") {
           fetchDefinition(request.word, (definition) => {
             sendResponse({ definition });
-          });   
+          });
         }
       }
     });
@@ -246,58 +246,58 @@ if (request.word) {
     //     }
     //   }
     // );
-    console.log("request.speaklang in bg="+request.speaklang);
+    console.log("request.speaklang in bg=" + request.speaklang);
 
     var outputLang = "en";
-    var textToSpeak=request.speak.replace(/(?:\r\n|\r|\n|\/|:)/g, '...!');
+    var textToSpeak = request.speak.replace(/(?:\r\n|\r|\n|\/|:)/g, '...!');
     //console.log(textToSpeak);
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       var tabId = tabs[0].id;
-    chrome.storage.local.get([tabId+"speakautocheckbox", tabId + "srclanguage", tabId + "tgtlanguage", tabId + "speaklanguage"], function(data) {
+      chrome.storage.local.get([tabId + "speakautocheckbox", tabId + "srclanguage", tabId + "tgtlanguage", tabId + "speaklanguage"], function (data) {
 
-      var speakautocheckbox = data[tabId + "speakautocheckbox"] || false;
-      var speaklanguage = data[tabId + "speaklanguage"] || "en_US";
+        var speakautocheckbox = data[tabId + "speakautocheckbox"] || false;
+        var speaklanguage = data[tabId + "speaklanguage"] || "en_US";
 
-      if(request.speaklang && request.speaklang === "srclang"){
-        speaklanguage = data[tabId + "srclanguage"] || "en_US";
-      }else if(request.speaklang && request.speaklang === "tgtlang"){
-        speaklanguage = data[tabId + "tgtlanguage"] || "en_US";
-      }
-      
-      console.log("speaklanguage in bg="+speaklanguage);
-      if(speakautocheckbox){
-        chrome.i18n.detectLanguage(request.speak, function (result) {
+        if (request.speaklang && request.speaklang === "srclang") {
+          speaklanguage = data[tabId + "srclanguage"] || "en_US";
+        } else if (request.speaklang && request.speaklang === "tgtlang") {
+          speaklanguage = data[tabId + "tgtlanguage"] || "en_US";
+        }
 
-          const REGEX_CHINESE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
-          const hasChinese = request.speak.match(REGEX_CHINESE);
-    
-          if (result && result.languages[0]) {
-            outputLang = result.languages[0].language;
-            if(!result.isReliable && outputLang!="ja" && outputLang!="zh"){
-              outputLang="en";
-            }else if(!hasChinese && (outputLang=="ja" || outputLang=="zh")){
-              outputLang="en";
-            }else if(hasChinese && (outputLang=="ja" || outputLang=="zh")){
-              outputLang="ja";
+        console.log("speaklanguage in bg=" + speaklanguage);
+        if (speakautocheckbox) {
+          chrome.i18n.detectLanguage(request.speak, function (result) {
+
+            const REGEX_CHINESE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
+            const hasChinese = request.speak.match(REGEX_CHINESE);
+
+            if (result && result.languages[0]) {
+              outputLang = result.languages[0].language;
+              if (!result.isReliable && outputLang != "ja" && outputLang != "zh") {
+                outputLang = "en";
+              } else if (!hasChinese && (outputLang == "ja" || outputLang == "zh")) {
+                outputLang = "en";
+              } else if (hasChinese && (outputLang == "ja" || outputLang == "zh")) {
+                outputLang = "ja";
+              }
+
+              if (outputLang == "en") {
+                chrome.tts.speak(textToSpeak, { lang: outputLang, voiceName: 'Alex' });
+
+              } else {
+                chrome.tts.speak(textToSpeak, { lang: outputLang });
+              }
+              sendResponse({ deflang: result.languages[0].language });
+            } else {
+              outputLang = "en";
+              chrome.tts.speak(textToSpeak, { lang: outputLang, voiceName: 'Alex' });
+              sendResponse({ deflang: "en" });
             }
-            
-            if(outputLang=="en"){
-              chrome.tts.speak(textToSpeak, { lang: outputLang, voiceName: 'Alex'});
-              
-            }else{
-              chrome.tts.speak(textToSpeak, { lang: outputLang });
-            }
-            sendResponse({ deflang: result.languages[0].language });
-          }else{
-            outputLang = "en";
-            chrome.tts.speak(textToSpeak, { lang: outputLang , voiceName: 'Alex' });
-            sendResponse({ deflang: "en" });
-          }
-        });
-      }else{
-        chrome.tts.speak(textToSpeak, { lang: speaklanguage });
-      }
-    });
+          });
+        } else {
+          chrome.tts.speak(textToSpeak, { lang: speaklanguage });
+        }
+      });
     });
 
     return true;
@@ -309,30 +309,30 @@ if (request.word) {
 
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       var tabId = tabs[0].id;
-        // Retrieve the value from chrome.storage
-        chrome.storage.local.get([tabId+"writeOnSelection"], function (data) {
-          const paramValue = data[tabs[0].id+"writeOnSelection"];
-          // Send the value as a response
-          sendResponse({ writeOnSelection: paramValue });
-        });
+      // Retrieve the value from chrome.storage
+      chrome.storage.local.get([tabId + "writeOnSelection"], function (data) {
+        const paramValue = data[tabs[0].id + "writeOnSelection"];
+        // Send the value as a response
+        sendResponse({ writeOnSelection: paramValue });
       });
-        // Return true to indicate that we will send a response asynchronously
-        return true;
-    
+    });
+    // Return true to indicate that we will send a response asynchronously
+    return true;
+
     //sendResponse({ writeOnSelection: "Yes" });
   } else if (request.slttxtval) {
 
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       var tabId = tabs[0].id;
-      var spkonseltxt=tabs[0].id+"spkonseltxt";
+      var spkonseltxt = tabs[0].id + "spkonseltxt";
       var valtxt;
       var spkonsleval;
 
-      chrome.storage.local.get([tabs[0].id+"seltxt",tabs[0].id+"spkonseltxt"], function (data) {
-        var valtxt = data[tabs[0].id+"seltxt"];
-        var spkonsleval = data[tabs[0].id+"spkonseltxt"];
+      chrome.storage.local.get([tabs[0].id + "seltxt", tabs[0].id + "spkonseltxt"], function (data) {
+        var valtxt = data[tabs[0].id + "seltxt"];
+        var spkonsleval = data[tabs[0].id + "spkonseltxt"];
         //console.log("spkonsleval in bg="+spkonsleval)
-        sendResponse({ deflang: valtxt , spkonsel: spkonsleval });
+        sendResponse({ deflang: valtxt, spkonsel: spkonsleval });
       });
 
       // chrome.storage.local.get(tabs[0].id+"seltxt", function (data) {
@@ -341,54 +341,54 @@ if (request.word) {
       // chrome.storage.local.get(spkonseltxt, function (data) {
       //   spkonsleval = data[spkonseltxt];
       // });
-      
+
     });
-    
+
     //sendResponse({ deflang: valtxt , spkonsel: spkonsleval });
     return true;
-  }else if (request.message === "getTranslationValues") {
+  } else if (request.message === "getTranslationValues") {
 
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       var tabId = tabs[0].id;
-    // // Get the checkbox value from the storage
-    // chrome.storage.local.get(tabId+"gtcheckbox", function(data) {
-    //   var value = data[tabId+"gtcheckbox"] || false;
-    //   console.log("val in bg="+value)
-    //   // Send the checkbox value back to the content script
-    //   sendResponse({ value: value });
-    // });
-    console.log("val in bg="+tabId)
-    chrome.storage.local.get([tabId+"gtcheckbox", tabId + "srclanguage", tabId + "tgtlanguage", tabId + "gtcheckbox", tabId + "gtlbylcheckbox"], function(data) {
-      var chkvalue = data[tabId + "gtcheckbox"] || "false";
-      var gtlbylcheckbox = data[tabId + "gtlbylcheckbox"] || "false";
-      var gtcheckbox = data[tabId + "gtcheckbox"] || "false";
-      var srclanguage = data[tabId + "srclanguage"] || "en_US";
-      var tgtlanguage = data[tabId + "tgtlanguage"] || "en_US";
+      // // Get the checkbox value from the storage
+      // chrome.storage.local.get(tabId+"gtcheckbox", function(data) {
+      //   var value = data[tabId+"gtcheckbox"] || false;
+      //   console.log("val in bg="+value)
+      //   // Send the checkbox value back to the content script
+      //   sendResponse({ value: value });
+      // });
+      console.log("val in bg=" + tabId)
+      chrome.storage.local.get([tabId + "gtcheckbox", tabId + "srclanguage", tabId + "tgtlanguage", tabId + "gtcheckbox", tabId + "gtlbylcheckbox"], function (data) {
+        var chkvalue = data[tabId + "gtcheckbox"] || "false";
+        var gtlbylcheckbox = data[tabId + "gtlbylcheckbox"] || "false";
+        var gtcheckbox = data[tabId + "gtcheckbox"] || "false";
+        var srclanguage = data[tabId + "srclanguage"] || "en_US";
+        var tgtlanguage = data[tabId + "tgtlanguage"] || "en_US";
 
-      console.log("gtlbylcheckbox in bg="+gtlbylcheckbox)
-      // Send the language values back to the content script
-      sendResponse({ chkvalue: chkvalue, srclanguage: srclanguage, tgtlanguage: tgtlanguage,gtcheckbox: gtcheckbox ,gtlbylcheckbox: gtlbylcheckbox });
+        console.log("gtlbylcheckbox in bg=" + gtlbylcheckbox)
+        // Send the language values back to the content script
+        sendResponse({ chkvalue: chkvalue, srclanguage: srclanguage, tgtlanguage: tgtlanguage, gtcheckbox: gtcheckbox, gtlbylcheckbox: gtlbylcheckbox });
+      });
+
+      // console.log("returning false")
+      // Indicate that the response will be sent asynchronously
     });
-
-   // console.log("returning false")
-    // Indicate that the response will be sent asynchronously
-  });
-  //sendResponse({ value: true });
-  return true;
-  }else if(request.downloadClipboardText){
+    //sendResponse({ value: true });
+    return true;
+  } else if (request.downloadClipboardText) {
     downloadClipboardText();
-  }else if(request.saveSelectedTextToClipboard){
-    var selectedWord=request.saveSelectedTextToClipboard
+  } else if (request.saveSelectedTextToClipboard) {
+    var selectedWord = request.saveSelectedTextToClipboard
     //saveSelectedTextToClipboard(selectedWord);
 
     // //const { selectedWord } = request;
-     console.log('Selected text written to clipboardddd.'+selectedWord);
+    console.log('Selected text written to clipboardddd.' + selectedWord);
     // chrome.runtime.sendMessage({ saveSelectedTextToClipboard: selectedWord });
 
     chrome.runtime.sendMessage({ action: selectedWord });
-  }else if(request.action){
-    
-    var selectedWord=request.action
+  } else if (request.action) {
+
+    var selectedWord = request.action
     console.log('Selected text written to clipboardvff.');
     //const { selectedWord } = request;
     navigator.clipboard.writeText(selectedWord).then(function () {
@@ -398,8 +398,8 @@ if (request.word) {
     });
 
 
-//    saveSelectedTextToClipboard(request.saveSelectedTextToClipboard);
-  }else if(request.initKuroshiro){
+    //    saveSelectedTextToClipboard(request.saveSelectedTextToClipboard);
+  } else if (request.message === 'initKuroshiro') {
     console.log("kuroshiro initKuroshiro req");
 
     if (!kuroshiroInstance) {
@@ -414,120 +414,90 @@ if (request.word) {
       console.log("kuroshiro already Initialized");
     }
 
-  }else if (request.showRomaji) {
+  } else if (request.showRomaji) {
+
+    var storedsrclanguage = request.storedsrclanguage;
+    var storedtgtlanguage = request.storedtgtlanguage;
+
     console.log("showRomaji kuroshiroInstance=" + kuroshiroInstance);
-    if (!kuroshiroInstance) {
-      // If kuroshiro is not initialized, request initialization.
-      initializeKuroshiro().then(() => {
-        // After initialization, send a message to indicate that kuroshiro is ready.
-        //chrome.runtime.sendMessage({ action: "kuroshiroInitialized" });
-        console.log("kuroshiroInitialized");
-      });
-    } else {
+    // if (!kuroshiroInstance) {
+    //   // If kuroshiro is not initialized, request initialization.
+    //   initializeKuroshiro().then(() => {
+    //     // After initialization, send a message to indicate that kuroshiro is ready.
+    //     //chrome.runtime.sendMessage({ action: "kuroshiroInitialized" });
+    //     console.log("kuroshiroInitialized");
+    //   });
+    // } else 
+    {
 
       if (request.showRomaji.length > 1000) {
         console.error("Text length is more than 1000 characters.");
         sendResponse({ romaji: "Text too long." });
         return true;
       }
-        
 
-      console.log("In bg request.showRomaji="+request.showRomaji);
+
+      console.log("In bg request.showRomaji=" + request.showRomaji);
 
       // Split the text into lines
 
+      console.log("In bg gtlbylcheckbox=" + request.gtlbylcheckbox);
+      // Take a maximum of the first 50 lines
+      var lines = [];
+      if (request.gtlbylcheckbox === true) {
+        console.log("In bg gtlbylcheckbox====true");
+        var alllines = request.showRomaji.split(/\r?\n/);
+        lines = alllines.slice(0, 30);
+      } else {
+        console.log("In bg gtlbylcheckbox====false");
+
+        lines.push(request.showRomaji);
+      }
+
+      //var lines = request.gtlbylcheckbox?alllines.slice(0, 30):alllines;
+      console.log("In bg lines=" + lines);
+
+      const convertedLines = [];
+
+      async function processLines() {
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          // Check if the line contains only numeric values
+          if (!isNaN(line.trim()) || line.trim() === 'NEW') {
+            continue; // Skip processing this line
+          }
+
+          try {
+            // Convert each line to Romaji
+            var convertedLine = line;
+
+            if(storedsrclanguage === 'ja-JP'){
+              convertedLine = await kuroshiroInstance.convert(line, { mode: "furigana", to: "hiragana" });
+            }
+
+            // Translate each line
+            //const translatedText = await translateInBg(line, "ja-JP", "en-US");
+            const translatedText = await translateInBg(line, storedsrclanguage, storedtgtlanguage);
+
+            //console.log("translatedText==" + translatedText);
+
+            // Push the converted line and translated text into convertedLines
+            convertedLines.push(convertedLine + "<br>" + translatedText);
+          } catch (error) {
+            console.error("Error:", error);
+          }
+        }
+
+        // Join the lines back together with new lines
+        const romajiText = convertedLines.join('<br>');
+        console.log(romajiText);
+        sendResponse({ romaji: romajiText });
+      }
+
+      processLines();
 
 
-
-console.log("In bg gtlbylcheckbox="+request.gtlbylcheckbox);
-// Take a maximum of the first 50 lines
-var lines = [];
-if(request.gtlbylcheckbox === true){
-  console.log("In bg gtlbylcheckbox====true");
-  var alllines = request.showRomaji.split(/\r?\n/);  
-  lines = alllines.slice(0, 30);
-}else{
-  console.log("In bg gtlbylcheckbox====false");
-
-  lines.push(request.showRomaji);
-}
-
-//var lines = request.gtlbylcheckbox?alllines.slice(0, 30):alllines;
-console.log("In bg lines="+lines);
-
-const convertedLines = [];
-
-/*
-// Convert each line to Romaji and handle the Promises
-Promise.all(lines.map((line) => {
-  return kuroshiroInstance.convert(line, {  mode:"furigana",to: 'hiragana'  }).then((convertedLine) => {
-
-    return translateInBg(line, "ja-JP", "en-US").then((translatedText) => {
-      console.log("translatedText==" + translatedText);
-
-      // Push the converted line and translated text into convertedLines
-      convertedLines.push(convertedLine + "<br>" + translatedText);
-    }).catch(error => {
-      console.error("Translation Error:", error);
-    });
-  }).catch(error => {
-    console.error("Conversion Error:", error);
-  });
-})).then(() => {
-
-  // Join the lines back together with new lines
-  const romajiText = convertedLines.join('<br>');
-  console.log(romajiText);
-  sendResponse({ romaji: romajiText });
-});
-*/
-
-async function processLines() {
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    // Check if the line contains only numeric values
-    if (!isNaN(line.trim()) || line.trim() === 'NEW') {
-      continue; // Skip processing this line
-    }
-
-    try {
-      // Convert each line to Romaji
-      const convertedLine = await kuroshiroInstance.convert(line, { mode: "furigana", to: "hiragana" });
-
-      // Translate each line
-      const translatedText = await translateInBg(line, "ja-JP", "en-US");
-
-      //console.log("translatedText==" + translatedText);
-
-      // Push the converted line and translated text into convertedLines
-      convertedLines.push(convertedLine + "<br>" + translatedText);
-    } catch (error) {
-      console.error("Error:", error);
-    }
-  }
-
-  // Join the lines back together with new lines
-  const romajiText = convertedLines.join('<br>');
-  console.log(romajiText);
-  sendResponse({ romaji: romajiText });
-}
-
-processLines();
-
-
-return true;
-// // Convert each line to Romaji
-// const convertedLines = lines.map((line) => {
-//   return kuroshiroInstance.convert(line, { to: 'romaji' });
-// });
-
-// // Join the lines back together with new lines
-// const romajiText = convertedLines.join('\n');
-
-      // kuroshiroInstance.convert(request.showRomaji, { mode:"furigana",to: 'hiragana' }).then((romaji) => {
-      //   console.log("romaji==="+romaji);
-      //   sendResponse({ romaji: romaji });
-      // });
+      return true;
     }
   }
 
@@ -537,7 +507,7 @@ let kuroshiroInstance = null;
 async function initializeKuroshiro() {
   kuroshiroInstance = new Kuroshiro();
   const analyzer = new KuromojiAnalyzer({ dictPath: "https://indojapcorp.github.io/TechNotes/tts/js/dict" });
-// kuroshiro2.init(analyzer);
+  // kuroshiro2.init(analyzer);
   await kuroshiroInstance.init(analyzer);
   console.log("In initializeKuroshiro");
 }
@@ -587,16 +557,16 @@ function getStringFromJSON(url) {
 }
 
 // Clear storage values when the browser is closed
-chrome.runtime.onSuspend.addListener(function() {
+chrome.runtime.onSuspend.addListener(function () {
   chrome.storage.local.clear();
 });
 
 // Clear local storage value for the tab when it is closed
-chrome.tabs.onRemoved.addListener(function(tabId) {
+chrome.tabs.onRemoved.addListener(function (tabId) {
   chrome.storage.local.remove(tabId.toString());
 });
 
-function saveSelectedTextToClipboard(text){
+function saveSelectedTextToClipboard(text) {
   navigator.clipboard.writeText(text).then(function () {
     console.log('Selected text written to clipboard.');
   }).catch(function (error) {
@@ -650,7 +620,7 @@ function saveAsMP3() {
         utterance.voice = voices[0]; // You can choose a specific voice here if you have multiple voices installed.
         var blob = new Blob([selectedText], { type: 'text/plain' });
         blobURL = URL.createObjectURL(blob);
-        speechSynthesis.speak(utterance);    
+        speechSynthesis.speak(utterance);
       });
     }
   });
@@ -660,7 +630,7 @@ function saveAsMP3New(selectedText) {
   var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   var utterance = new SpeechSynthesisUtterance(selectedText);
 
-  var voicesChangedListener = function() {
+  var voicesChangedListener = function () {
     speechSynthesis.removeEventListener('voiceschanged', voicesChangedListener);
     var audioBuffer = audioCtx.createBufferSource();
     var audioDestination = audioCtx.createMediaStreamDestination();
@@ -668,18 +638,18 @@ function saveAsMP3New(selectedText) {
     audioBuffer.connect(audioDestination);
 
     utterance.voice = speechSynthesis.getVoices()[0];
-    utterance.addEventListener('end', function() {
-      audioCtx.resume().then(function() {
-        audioCtx.suspend().then(function() {
+    utterance.addEventListener('end', function () {
+      audioCtx.resume().then(function () {
+        audioCtx.suspend().then(function () {
           var audioStream = audioDestination.stream;
           var mediaRecorder = new MediaRecorder(audioStream);
           var chunks = [];
 
-          mediaRecorder.addEventListener('dataavailable', function(event) {
+          mediaRecorder.addEventListener('dataavailable', function (event) {
             chunks.push(event.data);
           });
 
-          mediaRecorder.addEventListener('stop', function() {
+          mediaRecorder.addEventListener('stop', function () {
             var blob = new Blob(chunks, { type: 'audio/mp3' });
             var url = URL.createObjectURL(blob);
             var link = document.createElement('a');
@@ -691,7 +661,7 @@ function saveAsMP3New(selectedText) {
 
           mediaRecorder.start();
           audioCtx.resume();
-          setTimeout(function() {
+          setTimeout(function () {
             mediaRecorder.stop();
             audioCtx.close();
           }, 500);
