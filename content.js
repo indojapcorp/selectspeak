@@ -5,10 +5,10 @@ document.head.insertAdjacentHTML('beforeend', `<link rel="stylesheet" type="text
 
 let currentWord = null;
 
-function createDefinitionPopup(selectedWord, definition, showdef) {
+function createDefinitionPopup(selectedWord, definition, showdef,speakableTransText) {
 
-  console.log("selectedWord=" + selectedWord);
-  console.log("definition=" + definition);
+  //console.log("selectedWord=" + selectedWord);
+  //console.log("definition=" + definition);
   removeDefinitionPopup();
   const popup = document.createElement("div");
   popup.setAttribute("id", "popup");
@@ -33,7 +33,7 @@ function createDefinitionPopup(selectedWord, definition, showdef) {
     // s.padding         = "2px";
     s.whiteSpace = 'pre';  // <-- Right here.
 
-    //console.log("chk="+gtcheckboxEnabled);
+    //console.log("dsdsfdsfds chk="+gtcheckboxEnabled);
 
     // Send a message to the background script requesting the checkbox value
     chrome.runtime.sendMessage({ message: "getTranslationValues" }, function (response) {
@@ -111,8 +111,8 @@ function createDefinitionPopup(selectedWord, definition, showdef) {
   speakTransButton.textContent = "Speak Trans";
   speakTransButton.addEventListener("click", () => {
     // speakText(definition);
-    console.log("definition bef tgttext=" + definition);
-    speakTextTgtText(definition);
+    console.log("definition bef tgttext=" + speakableTransText);
+    speakTextTgtText(speakableTransText);
   });
   popupButtons.appendChild(speakTransButton);
 
@@ -137,7 +137,7 @@ function createDefinitionPopup(selectedWord, definition, showdef) {
             .then(result => {
               definition = result; // Assign the result to the global variable
               console.log("translatedVal=" + definition); // Log the value of translatedVal
-
+              speakableTransText = definition;
               var popuptrasnText = document.getElementById('popuptrasnTextDiv');
               if (!popuptrasnText) {
                 popuptrasnText = document.createElement("div");
@@ -177,9 +177,8 @@ function createDefinitionPopup(selectedWord, definition, showdef) {
   return popup;
 }
 
-
-function showDefinitionPopup(selectedWord, definition, x, y, showdef) {
-  const popup = createDefinitionPopup(selectedWord, definition, showdef);
+function showDefinitionPopup(selectedWord, definition, x, y, showdef , speakableTransText) {
+  const popup = createDefinitionPopup(selectedWord, definition, showdef,speakableTransText);
   popup.style.left = x + "px";
   popup.style.top = y + "px";
   document.body.appendChild(popup);
@@ -235,7 +234,7 @@ function getSelectionXStart(selection) {
 function handleMouseUp(event) {
   var source = event.target || event.srcElement;
 
-  console.log("In handleMouseUp source=" + source);
+  // console.log("In handleMouseUp source=" + source);
 
 
   if (source.id == 'speakButton' || source.id == 'stopSpeakButton' || source.id == 'closeButton' || source.id == 'translateButton' || source.id == 'speakTransButton') {
@@ -272,6 +271,7 @@ function handleMouseUp(event) {
     let storedsrclanguage = response.srclanguage;
     let storedtgtlanguage = response.tgtlanguage;
 
+
   if (selectedWord) {
     currentWord = selectedWord;
     //const x = event.pageX;
@@ -286,24 +286,20 @@ function handleMouseUp(event) {
     const REGEX_CHINESE = /[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff\uff66-\uff9f]/;
     const hasChinese = selectedWord.match(REGEX_CHINESE);
 
-    console.log("hasJapChinese=" + containsJapaneseCharacters(selectedWord));
-
     //if (containsJapaneseCharacters(selectedWord)) {
     if(!storedsrclanguage.startsWith("en-")){
 
       if(storedsrclanguage.startsWith("ja-")){
-
       chrome.runtime.sendMessage({ message: 'initKuroshiro' });
-      console.log("content gtlbylcheckbox=" + gtlbylcheckbox);
       }
 //      chrome.runtime.sendMessage({ message: 'getTranslationValues' }, (response) => {
 
         if (response && response.gtlbylcheckbox !== undefined) {
 
-          chrome.runtime.sendMessage({ showRomaji: selectedWord, gtlbylcheckbox: response.gtlbylcheckbox , storedsrclanguage:storedsrclanguage , storedtgtlanguage:storedtgtlanguage }, (response) => {
+          chrome.runtime.sendMessage({ showRomaji: selectedWord, gtlbylcheckbox: response.gtlbylcheckbox , storedsrclanguage:storedsrclanguage , storedtgtlanguage:storedtgtlanguage ,gtcheckbox: response.gtcheckbox}, (response) => {
 
             if (response && response.romaji) {
-              showDefinitionPopup(selectedWord, response.romaji, x + 5, y + 10, true);
+              showDefinitionPopup(selectedWord, response.romaji, x + 5, y + 10, true, response.translatedLinesText);
             }
           });
         }
@@ -327,33 +323,28 @@ function handleMouseUp(event) {
       if (!containsWhitespace(selectedWord) && storedsrclanguage.startsWith("en_")) {
         chrome.runtime.sendMessage({ word: selectedWord }, (response) => {
           if (response && response.definition) {
-            showDefinitionPopup(selectedWord + "..." + response.definition, response.definition, x + 5, y + 10, true);
+            showDefinitionPopup(selectedWord + "..." + response.definition, response.definition, x + 5, y + 10, true,"");
           } else if (response) {
-            showDefinitionPopup(selectedWord, "", x + 5, y + 10, true);
+            showDefinitionPopup(selectedWord, "", x + 5, y + 10, true,"");
           }
         });
       } else {
         var coordinates = getSelectionCoordinates();
-        showDefinitionPopup(selectedWord, selectedWord, coordinates.x, coordinates.y, false);
+        showDefinitionPopup(selectedWord, selectedWord, coordinates.x, coordinates.y, false,"");
       }
     }
 
-    chrome.runtime.sendMessage({ action: "getWriteOnSelection" }, function (response) {
+    // chrome.runtime.sendMessage({ action: "getWriteOnSelection" }, function (response) {
 
-      if (response.writeOnSelection) {
-        chrome.tabs.sendMessage(sender.tab.id, { action: 'saveSelectedTextToClipboard', selectedWord });
-      }
-    });
-
-
-    // const writeOnSelectionCheckbox = document.getElementById('writeOnSelection');
-    // console.log(selectedWord);
-    // if (writeOnSelectionCheckbox.checked) {
-    //   chrome.tabs.sendMessage(sender.tab.id, { action: 'saveSelectedTextToClipboard', selectedWord });
-    // }
-
-
-    // chrome.runtime.sendMessage({ saveSelectedTextToClipboard: selectedWord }, (response) => {
+    //   if (response.writeOnSelection) {
+    //     navigator.clipboard.writeText(selectedWord).then(function () {
+    //       console.log('Selected text written to clipboard in content js.'+selectedWord);
+    //     }).catch(function (error) {
+    //       console.error('Failed to write text to clipboard:', error);
+    //     });
+    
+    //     chrome.tabs.sendMessage(sender.tab.id, { action: 'saveSelectedTextToClipboard', selectedWord });
+    //   }
     // });
 
   }
@@ -417,7 +408,17 @@ document.addEventListener("DOMContentLoaded", function () {
   // win.focus();
   // }
 
+  document.getElementById('downloadClipboard').addEventListener('click', function () {
+    console.log("calling dwd");
+    //downloadClipboardTextContent();
+    console.log("calling dwd over");
 
+    chrome.runtime.sendMessage({ downloadClipboardText: true }, (response) => {
+      console.log(""+ response.clipboardText);
+      downloadClipboardTextContent(response.clipboardText);
+       });
+
+  });
 
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
     var tabId = tabs[0].id;
@@ -460,31 +461,33 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     // Download text from clipboard
-    document.getElementById('downloadClipboard').addEventListener('click', function () {
+    // document.getElementById('downloadClipboard').addEventListener('click', function () {
+    //   console.log("calling dwd");
+    //   downloadClipboardTextContent();
+    //   console.log("calling dwd over");
+    //   // chrome.runtime.sendMessage({ downloadClipboardText: "Yes" }, (response) => {
+    //   // });
 
-      chrome.runtime.sendMessage({ downloadClipboardText: "Yes" }, (response) => {
-      });
 
-
-      // chrome.scripting.executeScript({
-      //   function: function () {
-      //     return navigator.clipboard.readText();
-      //   }
-      // }, function (result) {
-      //   if (result[0] && result[0].result) {
-      //     const clipboardText = result[0].result;
-      //     const blob = new Blob([clipboardText], { type: 'text/plain' });
-      //     const url = URL.createObjectURL(blob);
-      //     const a = document.createElement('a');
-      //     a.href = url;
-      //     a.download = 'clipboard_text.txt';
-      //     a.click();
-      //     URL.revokeObjectURL(url);
-      //   } else {
-      //     console.error('Failed to read text from clipboard.');
-      //   }
-      // });
-    });
+    //   // chrome.scripting.executeScript({
+    //   //   function: function () {
+    //   //     return navigator.clipboard.readText();
+    //   //   }
+    //   // }, function (result) {
+    //   //   if (result[0] && result[0].result) {
+    //   //     const clipboardText = result[0].result;
+    //   //     const blob = new Blob([clipboardText], { type: 'text/plain' });
+    //   //     const url = URL.createObjectURL(blob);
+    //   //     const a = document.createElement('a');
+    //   //     a.href = url;
+    //   //     a.download = 'clipboard_text.txt';
+    //   //     a.click();
+    //   //     URL.revokeObjectURL(url);
+    //   //   } else {
+    //   //     console.error('Failed to read text from clipboard.');
+    //   //   }
+    //   // });
+    // });
 
 
 
@@ -588,7 +591,33 @@ document.addEventListener("mouseup", (event) => {
 
   const selection = window.getSelection();
   const selectedWord = selection.toString().trim();
-  chrome.runtime.sendMessage({ saveSelectedTextToClipboard: selectedWord });
+
+  if(selectedWord && selectedWord.length > 0){
+    chrome.runtime.sendMessage({ action: "getWriteOnSelection" }, function (response) {
+
+      if (response.writeOnSelection) {
+        chrome.runtime.sendMessage({ writeToClipboard: selectedWord });
+
+    navigator.clipboard.writeText(selectedWord).then(function () {
+      console.log('Selected text written to clipboard in content js.'+selectedWord);
+
+      // navigator.clipboard
+      // .readText()
+      // .then((clipText) => {
+      //   console.log('Clipboard text read from clipboard:', clipText);
+      // })
+      // .catch(function (error) {
+      //   console.error('Failed to read text from clipboard:', error);
+      // });
+  
+    }).catch(function (error) {
+      console.error('Failed to write text to clipboard:', error);
+    });
+    }
+  });
+  }
+
+  //chrome.runtime.sendMessage({ saveSelectedTextToClipboard: selectedWord });
 
   if (chrome.runtime?.id) {
 
@@ -641,7 +670,7 @@ function speakText(text) {
 function speakTextTgtText(text) {
 
   if (!text) return;
-  console.log("speakTextTgtText=" + text);
+  //console.log("speakTextTgtText=" + text);
   chrome.runtime.sendMessage({ speak: text, speaklang: "tgtlang" }, (response) => {
 
   });
@@ -725,4 +754,16 @@ function getStringFromJSON(url) {
       console.log('Error:', error);
     });
 
+}
+
+function downloadClipboardTextContent(downloadClipboardText) {
+  
+      const clipboardText = downloadClipboardText;
+      const blob = new Blob([clipboardText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'clipboard_text.txt';
+      a.click();
+      URL.revokeObjectURL(url);
 }

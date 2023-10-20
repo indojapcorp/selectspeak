@@ -1,7 +1,7 @@
 /* Style for the dictionary popup */
 .dictionary-popup {
   position: absolute;
-  z-index: 9999;
+  z-index: 99999;
   background-color: #fff;
   border: 1px solid #ddd;
   box-shadow: 0 2px 5px rgba(0,0,0,0.2);

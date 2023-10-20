@@ -64,7 +64,9 @@ chrome.contextMenus.create({
 
 
 document.head.innerHTML += "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js\"></script>";
-
+// document.head.innerHTML += "<script src=\"https://cdn.jsdelivr.net/npm/pinyin4js@1.3.18/dist/pinyin4js.min.js\"></script>"
+// document.head.innerHTML += "<script src=\"https://cdn.jsdelivr.net/npm/hangul-js@0.2.6/hangul.min.js\"></script>"
+// document.head.innerHTML += "<script src=\"https://cdn.jsdelivr.net/npm/aromanize@0.1.5/aromanize.min.js\"></script>"
 chrome.contextMenus.onClicked.addListener(function (info, tab) {
 
   if (info.menuItemId === 'writeSelectionToClipboard') {
@@ -79,7 +81,8 @@ chrome.contextMenus.onClicked.addListener(function (info, tab) {
 
   } else if (info.menuItemId === 'downloadFromClipboard') {
 
-    downloadClipboardText();
+    downloadClipboardTextBg(clipboardText);
+
 
   } else if (info.menuItemId === 'saveAsMP3New') {
     var selectedText = info.selectionText;
@@ -210,6 +213,8 @@ function fetchDefinition(word, callback) {
       callback(null);
     });
 }
+
+let clipboardText = "";
 //var valtxt;
 //var spkonsleval;
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -320,6 +325,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
 
     //sendResponse({ writeOnSelection: "Yes" });
+  }else if (request.downloadClipboardText) {
+
+    sendResponse({ clipboardText: clipboardText });
+
+    return true;
+
+    //sendResponse({ writeOnSelection: "Yes" });
   } else if (request.slttxtval) {
 
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -335,12 +347,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         sendResponse({ deflang: valtxt, spkonsel: spkonsleval });
       });
 
-      // chrome.storage.local.get(tabs[0].id+"seltxt", function (data) {
-      //   valtxt = data[tabs[0].id+"seltxt"];
-      // });
-      // chrome.storage.local.get(spkonseltxt, function (data) {
-      //   spkonsleval = data[spkonseltxt];
-      // });
 
     });
 
@@ -350,13 +356,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       var tabId = tabs[0].id;
-      // // Get the checkbox value from the storage
-      // chrome.storage.local.get(tabId+"gtcheckbox", function(data) {
-      //   var value = data[tabId+"gtcheckbox"] || false;
-      //   console.log("val in bg="+value)
-      //   // Send the checkbox value back to the content script
-      //   sendResponse({ value: value });
-      // });
       console.log("val in bg=" + tabId)
       chrome.storage.local.get([tabId + "gtcheckbox", tabId + "srclanguage", tabId + "tgtlanguage", tabId + "gtcheckbox", tabId + "gtlbylcheckbox"], function (data) {
         var chkvalue = data[tabId + "gtcheckbox"] || "false";
@@ -375,32 +374,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     //sendResponse({ value: true });
     return true;
-  } else if (request.downloadClipboardText) {
-    downloadClipboardText();
   } else if (request.saveSelectedTextToClipboard) {
     var selectedWord = request.saveSelectedTextToClipboard
-    //saveSelectedTextToClipboard(selectedWord);
 
     // //const { selectedWord } = request;
     console.log('Selected text written to clipboardddd.' + selectedWord);
     // chrome.runtime.sendMessage({ saveSelectedTextToClipboard: selectedWord });
 
     chrome.runtime.sendMessage({ action: selectedWord });
-  } else if (request.action) {
+  } else if (request.writeToClipboard) {
 
-    var selectedWord = request.action
-    console.log('Selected text written to clipboardvff.');
-    //const { selectedWord } = request;
-    navigator.clipboard.writeText(selectedWord).then(function () {
-      console.log('Selected text written to clipboard.');
-    }).catch(function (error) {
-      console.error('Failed to write text to clipboard:', error);
-    });
+    var selectedWord = request.writeToClipboard
+    clipboardText += selectedWord +"\n" ;
+    //console.log('Selected text written to clipboardvff writeToClipboard.' + clipboardText);
+    chrome.runtime.sendMessage({ clipboardText: clipboardText });
 
 
     //    saveSelectedTextToClipboard(request.saveSelectedTextToClipboard);
   } else if (request.message === 'initKuroshiro') {
-    console.log("kuroshiro initKuroshiro req");
 
     if (!kuroshiroInstance) {
       initializeKuroshiro().then(() => {
@@ -418,8 +409,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
     var storedsrclanguage = request.storedsrclanguage;
     var storedtgtlanguage = request.storedtgtlanguage;
+    var gtcheckbox = request.gtcheckbox;
 
     console.log("showRomaji kuroshiroInstance=" + kuroshiroInstance);
+    //console.log("showRomaji gtcheckbox=" + gtcheckbox);
+    
     // if (!kuroshiroInstance) {
     //   // If kuroshiro is not initialized, request initialization.
     //   initializeKuroshiro().then(() => {
@@ -437,27 +431,25 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
 
 
-      console.log("In bg request.showRomaji=" + request.showRomaji);
+      //console.log("In bg request.showRomaji=" + request.showRomaji);
 
       // Split the text into lines
 
-      console.log("In bg gtlbylcheckbox=" + request.gtlbylcheckbox);
+      //console.log("In bg gtlbylcheckbox=" + request.gtlbylcheckbox);
       // Take a maximum of the first 50 lines
       var lines = [];
       if (request.gtlbylcheckbox === true) {
-        console.log("In bg gtlbylcheckbox====true");
         var alllines = request.showRomaji.split(/\r?\n/);
         lines = alllines.slice(0, 30);
       } else {
-        console.log("In bg gtlbylcheckbox====false");
-
         lines.push(request.showRomaji);
       }
 
       //var lines = request.gtlbylcheckbox?alllines.slice(0, 30):alllines;
-      console.log("In bg lines=" + lines);
+      //console.log("In bg lines=" + lines);
 
       const convertedLines = [];
+      const translatedLines = [];
 
       async function processLines() {
         for (let i = 0; i < lines.length; i++) {
@@ -473,16 +465,41 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
             if(storedsrclanguage === 'ja-JP'){
               convertedLine = await kuroshiroInstance.convert(line, { mode: "furigana", to: "hiragana" });
+            }else if(storedsrclanguage === 'zh-CN'){
+              convertedLine = line + "<br>" + PinyinHelper.convertToPinyinString(line, '#', PinyinFormat.WITH_TONE_MARK);
+            }else if(storedsrclanguage === 'ko'){
+              const romanizedLine = Aromanize.romanize(line);
+              convertedLine = line + "<br>" + romanizedLine +"<br>"+Hangul.disassemble(line)+"<br>"+Hangul.disassemble(romanizedLine);
             }
+
+            if(gtcheckbox === true){
+              //console.log("showRomaji if gtcheckbox=" + gtcheckbox);
 
             // Translate each line
             //const translatedText = await translateInBg(line, "ja-JP", "en-US");
-            const translatedText = await translateInBg(line, storedsrclanguage, storedtgtlanguage);
+            var translatedText = await translateInBg(line, storedsrclanguage, storedtgtlanguage);
 
+
+            if(storedtgtlanguage === 'ja-JP'){
+              translatedText = await kuroshiroInstance.convert(translatedText, { mode: "furigana", to: "hiragana" });
+            }else if(storedtgtlanguage === 'zh-CN'){
+              translatedText = translatedText + "<br>" + PinyinHelper.convertToPinyinString(translatedText, '#', PinyinFormat.WITH_TONE_MARK);
+            }else if(storedtgtlanguage === 'ko'){
+              const romanizedLine = Aromanize.romanize(translatedText);
+              translatedText = translatedText + "<br>" + romanizedLine +"<br>"+Hangul.disassemble(translatedText)+"<br>"+Hangul.disassemble(romanizedLine);
+            }
+
+
+            translatedLines.push(translatedText);
             //console.log("translatedText==" + translatedText);
 
             // Push the converted line and translated text into convertedLines
             convertedLines.push(convertedLine + "<br>" + translatedText);
+            }else{
+              //console.log(" gtcheckbox=false else ");
+
+              convertedLines.push(convertedLine);
+            }
           } catch (error) {
             console.error("Error:", error);
           }
@@ -490,8 +507,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
         // Join the lines back together with new lines
         const romajiText = convertedLines.join('<br>');
+        const translatedLinesText = translatedLines.join('...');
         console.log(romajiText);
-        sendResponse({ romaji: romajiText });
+        sendResponse({ romaji: romajiText , translatedLinesText: translatedLinesText});
       }
 
       processLines();
@@ -523,23 +541,6 @@ async function translateInBg(sourceText, sourceLang, targetLang) {
 }
 
 function getStringFromJSON(url) {
-  // return fetch(url)
-  //   .then(response => response.json())
-  //   .then(data => {
-  //     let result = '';
-  //     result += data[0][0] + '\n';
-  //     for (let key in data[0]) {
-  //       for (let index in key) {
-  //         //result += data[0][index] + '\n';
-  //       }
-  //       //result += data[0][key] + '\n';
-  //     }
-  //     console.log("inssssxxx="+result);
-  //     return result;
-  //   })
-  //   .catch(error => {
-  //     console.log('Error:', error);
-  //   });
 
   return fetch(url)
     .then(response => response.json())
@@ -595,6 +596,17 @@ function downloadClipboardText() {
   });
 }
 
+function downloadClipboardTextBg(downloadClipboardText) {
+  
+  const clipboardText = downloadClipboardText;
+  const blob = new Blob([clipboardText], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'clipboard_text.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 function saveAsMP3() {
   chrome.tabs.executeScript({
